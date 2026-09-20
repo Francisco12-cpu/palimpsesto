@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0d0a07">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Palimpsesto">
+<title>Palimpsesto — o jogo das vanguardas literárias</title>
+<meta name="description" content="Escreva no estilo de uma vanguarda literária e descubra a escola dos seus amigos. Jogo multiplayer em rede local.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/cinzel-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/im-fell-english-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./src/ui/theme.css">
+<link rel="stylesheet" href="./src/ui/effects.css">
+</head>
+<body>
+<div class="textura-fundo"></div>
+<div class="poeira" id="poeira"></div>
+<div id="banner" role="status"></div>
+<div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<main class="shell" id="app">
+  <noscript>Ative o JavaScript para jogar.</noscript>
+</main>
+<script>
+  if (location.protocol === 'file:') {
+    document.getElementById('app').innerHTML = '<h1>Abra pelo servidor local</h1><p>O navegador bloqueia módulos ao abrir o arquivo direto. Dê dois cliques em <b>iniciar.bat</b> (ou rode <code>npm run serve</code>) e acesse <b>http://localhost:8080</b>.</p>';
+  }
+</script>
+<script type="module" src="./src/ui/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Palimpsesto — o jogo das vanguardas literárias",
+  "short_name": "Palimpsesto",
+  "description": "Escreva no estilo de uma vanguarda literária e descubra a escola dos seus amigos.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0a07",
+  "theme_color": "#0d0a07",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

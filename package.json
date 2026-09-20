@@ -1,0 +1,16 @@
+{
+  "name": "jogo-vanguardas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "serve": "node serve.mjs --open",
+    "pack": "node tools/pack.mjs",
+    "analyze": "node tools/analyze.mjs"
+  },
+  "description": "Palimpsesto — jogo multiplayer de escrita sobre vanguardas literárias",
+  "devDependencies": {
+    "jsdom": "^30.1.0"
+  }
+}
