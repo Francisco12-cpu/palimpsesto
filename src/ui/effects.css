@@ -30,7 +30,7 @@ body { overscroll-behavior-y: contain; padding-top: env(safe-area-inset-top); }
 .splash { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; pointer-events: none; background: radial-gradient(circle, rgba(13, 10, 7, .82), rgba(13, 10, 7, .35) 70%, transparent); animation: splashBg 1.4s ease both; }
 .splash-in { text-align: center; animation: splashIn 1.4s cubic-bezier(.2, .8, .2, 1) both; }
 .splash-title { font: 900 clamp(2rem, 9vw, 4rem) var(--f-title); color: var(--gold-hi); letter-spacing: .12em; text-transform: uppercase; text-shadow: 0 0 40px rgba(212, 175, 55, .7); }
-.splash-sub { font: 600 .8rem var(--f-title); letter-spacing: .5em; color: var(--gold-dark); text-transform: uppercase; margin-bottom: 6px; }
+.splash-sub { font: 600 .8rem var(--f-title); letter-spacing: .5em; color: var(--gold-text); text-transform: uppercase; margin-bottom: 6px; }
 .splash-line { height: 2px; margin: 12px auto 0; width: 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: splashLine 1s .15s ease forwards; }
 @keyframes splashBg { 0%, 100% { opacity: 0; } 20%, 70% { opacity: 1; } }
 @keyframes splashIn { 0% { opacity: 0; transform: scale(.85); } 25% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: scale(1.08); } }
@@ -94,8 +94,8 @@ body.urgent::after { content: ''; position: fixed; inset: 0; z-index: 20; pointe
 .sound-btn { display: none; }
 
 /* seletor de cor do jogador */
-.swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-.swatch { width: 38px; height: 38px; min-height: 38px; padding: 0; border-radius: 50%; background: radial-gradient(circle at 30% 25%, hsl(var(--h) 55% 48%), hsl(var(--h) 55% 24%)); border: 2px solid transparent; }
+.swatches { display: flex; gap: 6px; flex-wrap: nowrap; margin-top: 6px; }
+.swatch { width: 34px; height: 34px; min-height: 34px; flex: none; padding: 0; border-radius: 50%; background: radial-gradient(circle at 30% 25%, hsl(var(--h) 55% 48%), hsl(var(--h) 55% 24%)); border: 2px solid transparent; }
 .swatch[aria-pressed=true] { border-color: var(--gold-hi); box-shadow: 0 0 14px rgba(243, 217, 122, .6); }
 
 /* QR da sala */
@@ -126,4 +126,16 @@ body.urgent::after { content: ''; position: fixed; inset: 0; z-index: 20; pointe
 @media (prefers-reduced-motion: reduce) {
   .watermark { animation: none; }
   body.urgent::after { animation: none; opacity: .6; }
+}
+
+/* palavras-chave: as já usadas no texto ficam marcadas */
+.tag.kw { transition: background .2s, color .2s, border-color .2s; }
+.tag.kw.ok { background: rgba(121, 184, 119, .2); border-color: var(--green); color: var(--green); }
+.tag.kw.ok::before { content: '✓ '; }
+
+/* celular: o selo da vanguarda fica ao lado do texto (não numa linha só dele) */
+@media (max-width: 700px) {
+  .mission { flex-direction: row; gap: 12px; }
+  .mission .seal { width: 56px !important; height: 56px !important; font-size: 28px !important; }
+  .mission .van { font-size: 1.25rem; }
 }

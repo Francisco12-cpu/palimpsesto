@@ -6,6 +6,7 @@
 //   node serve.mjs [--open] [--port=8080]
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { writeFileSync, readFileSync, renameSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,6 +68,30 @@ async function loadFile(rel) {
 
 const relay = new Relay();
 let port = basePort;
+
+// As salas sobrevivem a um reinício do servidor: o estado vai para data/rooms.json a cada mudança.
+const DATA_DIR = join(root, 'data');
+const ROOMS_FILE = join(DATA_DIR, 'rooms.json');
+let lastSaved = '';
+function saveRooms() {
+  try {
+    const s = JSON.stringify(relay.exportState());
+    if (s === lastSaved) return;
+    lastSaved = s;
+    mkdirSync(DATA_DIR, { recursive: true });
+    writeFileSync(`${ROOMS_FILE}.tmp`, s);
+    renameSync(`${ROOMS_FILE}.tmp`, ROOMS_FILE); // troca atômica: nunca fica arquivo pela metade
+  } catch { /* sem disco: segue só em memória */ }
+}
+try {
+  if (existsSync(ROOMS_FILE) && Date.now() - statSync(ROOMS_FILE).mtimeMs < 60 * 60 * 1000) {
+    const n = relay.importState(JSON.parse(readFileSync(ROOMS_FILE, 'utf8')));
+    if (n) console.log(`  Recuperei ${n} sala(s) da última execução — os jogadores reconectam sozinhos.`);
+  }
+} catch { /* arquivo ilegível: começa limpo */ }
+setInterval(saveRooms, 3000).unref();
+process.on('SIGINT', () => { saveRooms(); process.exit(0); });
+process.on('exit', saveRooms);
 
 const server = createServer(async (req, res) => {
   try {

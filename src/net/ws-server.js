@@ -29,16 +29,24 @@ export function attachWebSocket(server, path, onConnection) {
       return;
     }
     const accept = createHash('sha1').update(key + GUID).digest('base64');
-    socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+    // subprotocolo pedido pelo cliente (ex.: "mqtt"): devolvemos o primeiro, como manda a RFC
+    const proto = String(req.headers['sec-websocket-protocol'] ?? '').split(',')[0].trim();
+    const protoLine = proto ? `Sec-WebSocket-Protocol: ${proto}\r\n` : '';
+    socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n${protoLine}\r\n`);
     socket.setNoDelay(true);
 
     let buf = Buffer.alloc(0);
     let fragments = [];
+    let fragOp = 0x1;
     let closed = false;
     let lastSeen = Date.now();
 
     const conn = {
       onmessage: () => {},
+      onbinary: () => {},
+      sendBinary(buf) {
+        if (!closed) socket.write(frame(0x2, Buffer.from(buf)));
+      },
       onclose: () => {},
       send(obj) {
         if (!closed) socket.write(frame(0x1, Buffer.from(JSON.stringify(obj))));
@@ -91,12 +99,14 @@ export function attachWebSocket(server, path, onConnection) {
         if (opcode === 0x8) return finish();
         if (opcode === 0x9) { socket.write(frame(0xa, payload)); continue; }
         if (opcode === 0xa) continue;
-        if (opcode === 0x1 || opcode === 0x0) {
+        if (opcode === 0x1 || opcode === 0x2 || opcode === 0x0) {
+          if (opcode !== 0x0) fragOp = opcode; // texto (JSON) ou binário (MQTT)
           fragments.push(payload);
           if (!fin) continue;
-          const text = Buffer.concat(fragments).toString('utf8');
+          const whole = Buffer.concat(fragments);
           fragments = [];
-          try { conn.onmessage(JSON.parse(text)); } catch { /* JSON inválido: ignora */ }
+          if (fragOp === 0x2) conn.onbinary(whole);
+          else { try { conn.onmessage(JSON.parse(whole.toString('utf8'))); } catch { /* JSON inválido: ignora */ } }
         }
       }
     });

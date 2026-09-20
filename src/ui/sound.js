@@ -198,7 +198,6 @@ export const music = {
 
 // ------------------------------------------------------------------ configurações
 export const audioSettings = () => ({ ...cfg });
-export const isMuted = () => cfg.muted;
 
 export function setAudio(patch) {
   cfg = { ...cfg, ...patch };

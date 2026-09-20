@@ -207,3 +207,51 @@ test('servidor: ETag (304) e gzip nos arquivos de texto', async () => {
     child.kill();
   }
 });
+
+test('persistência: salas exportadas/importadas; host volta e mantém o cargo; outro não o substitui', () => {
+  const { mk: mk1 } = relayKit({ promoteGraceMs: 0 });
+  const k1 = relayKit({ promoteGraceMs: 4000 });
+  const h = k1.mk(); const p = k1.mk();
+  h.h.message({ t: 'create', id: 'h', name: 'H', token: 'th' });
+  const code = h.last('joined').room;
+  p.h.message({ t: 'join', room: code, id: 'p', name: 'P', token: 'tp' });
+  h.h.message({ t: 'sync', snapshot: { turno: 9 } });
+  const saved = JSON.parse(JSON.stringify(k1.relay.exportState())); // como no disco
+  assert.ok(!JSON.stringify(saved).includes('ctx'));
+  void mk1;
+
+  // "reinício": relay novo com o estado do disco
+  const k2 = relayKit({ promoteGraceMs: 4000 });
+  assert.equal(k2.relay.importState(saved), 1);
+  assert.equal(k2.relay.importState(saved), 0); // idempotente
+  const p2 = k2.mk();
+  p2.h.message({ t: 'join', room: code, id: 'p', name: 'P', token: 'tp' }); // o não-host volta primeiro
+  assert.equal(p2.last('joined').isHost, false, 'não rouba o cargo enquanto o host pode voltar');
+  const h2 = k2.mk();
+  h2.h.message({ t: 'join', room: code, id: 'h', name: 'H', token: 'th' });
+  assert.equal(h2.last('joined').isHost, true);
+  assert.deepEqual(h2.last('joined').snapshot, { turno: 9 });
+  // token continua valendo depois do reinício
+  const thief = k2.mk();
+  thief.h.message({ t: 'join', room: code, id: 'h', name: 'X', token: 'errado' });
+  assert.equal(thief.last('error').fatal, true);
+  assert.equal(k2.relay.importState({ v: 2 }), 0);
+});
+
+test('persistência: se o host não voltar no prazo, o próximo jogador assume', () => {
+  const k1 = relayKit({ promoteGraceMs: 4000 });
+  const h = k1.mk(); const p = k1.mk();
+  h.h.message({ t: 'create', id: 'h', name: 'H', token: 'th' });
+  const code = h.last('joined').room;
+  p.h.message({ t: 'join', room: code, id: 'p', name: 'P', token: 'tp' });
+  h.h.message({ t: 'sync', snapshot: { turno: 3 } });
+  const saved = JSON.parse(JSON.stringify(k1.relay.exportState()));
+
+  const k2 = relayKit({ promoteGraceMs: 4000 });
+  k2.relay.importState(saved, 20_000);
+  const p2 = k2.mk();
+  p2.h.message({ t: 'join', room: code, id: 'p', name: 'P', token: 'tp' });
+  k2.tick(21_000); k2.fire(); // passou o prazo e o host não apareceu
+  assert.equal(p2.last('promote')?.oldHostId, 'h');
+  assert.deepEqual(p2.last('promote').snapshot, { turno: 3 });
+});

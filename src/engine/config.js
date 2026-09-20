@@ -12,6 +12,8 @@ export const DEFAULT_CONFIG = {
   reportPenalty: 2,
   roundsPerPlayer: 3, // cada rodada todos escrevem 1 vez
   fanThreshold: 3, // título "Fã do X": mesma vanguarda chutada N vezes
+  keywordPenalty: 0, // pontos que o autor perde se não usar TODAS as palavras-chave (0 = só informativo)
+  filterProfanity: false, // troca palavrões por asteriscos ao capturar o texto
   // Facilitador: só a UI usa (Fase 2/4), fica aqui pra viajar junto com a config da sala.
   helper: { autocomplete: true, showAllNames: false },
   timers: { writing: 120, revealing: 10, guessing: 20, reporting: 25, scoring: 12 }, // segundos
@@ -49,6 +51,8 @@ export function normalizeConfig(partial = {}, content) {
     reportPenalty: clampInt(p.reportPenalty ?? d.reportPenalty, 0, 20, d.reportPenalty),
     roundsPerPlayer: clampInt(p.roundsPerPlayer ?? d.roundsPerPlayer, 1, 20, d.roundsPerPlayer),
     fanThreshold: clampInt(p.fanThreshold ?? d.fanThreshold, 2, 20, d.fanThreshold),
+    keywordPenalty: clampInt(p.keywordPenalty ?? d.keywordPenalty, 0, 10, d.keywordPenalty),
+    filterProfanity: !!(p.filterProfanity ?? d.filterProfanity),
     helper: { ...d.helper, ...(p.helper || {}) },
     timers,
   };

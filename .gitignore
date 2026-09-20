@@ -6,3 +6,6 @@ Thumbs.db
 
 # referência visual pessoal (não faz parte do jogo)
 exeplo visual menu.html
+
+# estado das salas do servidor local (gerado em execução)
+data/

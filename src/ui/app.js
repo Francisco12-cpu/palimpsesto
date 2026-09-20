@@ -26,7 +26,7 @@ let myColor = loadColor();
 store.set(COLOR_KEY, myColor);
 
 // convite por link/QR: ?sala=ABCD
-let inviteCode = new URLSearchParams(location.search).get('sala')?.toUpperCase().slice(0, 4) || '';
+let inviteCode = new URLSearchParams(location.search).get('sala')?.toUpperCase().slice(0, 6) || '';
 if (inviteCode) history.replaceState(null, '', location.pathname);
 
 const backBtn = `<p><button id="back" class="ghost">${icon('back', 16)} Menu</button></p>`;
@@ -87,7 +87,7 @@ function menu() {
   };
   document.getElementById('resume')?.addEventListener('click', () => {
     const n = nameValue() || saved.name;
-    startNet(app, { playerName: n, color: myColor, mode: 'join', code: saved.room, auto: true, server: saved.server, onExit: menu });
+    startNet(app, { playerName: n, color: myColor, mode: 'join', code: saved.room, auto: true, server: saved.server, transport: saved.transport ?? 'auto', onExit: menu });
   });
   document.getElementById('dropSession')?.addEventListener('click', () => { session.clear(); menu(); });
   document.getElementById('acceptInvite')?.addEventListener('click', () => {
@@ -128,7 +128,8 @@ function howto() {
     <p class="slogan">${BRAND.slogan}</p>
     <div class="steps">${steps.map(([ic, t, d], i) => `<div class="panel step-card"><span class="n">${i + 1}</span>
       <div><b>${icon(ic, 18)} ${t}</b><div>${d}</div></div></div>`).join('')}</div>
-    <div class="callout"><b>Em rede local:</b> uma pessoa (com o Node ou a versão empacotada) abre o <b>iniciar.bat</b>, cria a sala e mostra o QR code. Os amigos escaneiam com o celular — sem internet.</div>
+    <div class="callout"><b>Online (mais fácil):</b> abra o jogo pelo endereço na internet, crie a sala e mostre o QR code. Os amigos escaneiam e entram — não precisa instalar nada.</div>
+    <div class="callout"><b>Em rede local (sem internet):</b> uma pessoa abre o <b>iniciar.bat</b> no computador, cria a sala e mostra o QR code. Os amigos, no mesmo Wi-Fi, escaneiam com o celular.</div>
     <div class="callout"><b>Dica:</b> na tela de escrita há um “Lembrete do estilo” com as características da sua vanguarda.</div>
     <p><button id="ok" class="primary">${icon('check', 16)} Entendi</button></p></div>`;
   document.getElementById('back').onclick = menu;
@@ -167,7 +168,15 @@ function credits() {
   document.getElementById('back').onclick = menu;
 }
 
-// ------------------------------------------------------------------ áudio (botão + painel)
+// ------------------------------------------------------------------ tamanho do texto
+const SCALES = [0.9, 1, 1.15, 1.3];
+const SCALE_KEY = 'palimpsesto.scale';
+let scale = Number(store.get(SCALE_KEY, '1'));
+if (!SCALES.includes(scale)) scale = 1;
+const applyScale = () => document.documentElement.style.setProperty('--scale', String(scale));
+applyScale();
+
+// ------------------------------------------------------------------ áudio e leitura (botão + painel)
 function settingsPanel() {
   const btn = document.createElement('button');
   btn.className = 'settings-btn';
@@ -179,11 +188,17 @@ function settingsPanel() {
   const paint = () => {
     const a = audioSettings();
     btn.innerHTML = icon(a.muted ? 'mute' : 'sound', 20);
-    panel.innerHTML = `<h3>Som e vibração</h3>
+    panel.innerHTML = `<h3>Som, vibração e leitura</h3>
       <label class="inline"><input type="checkbox" id="sMute" ${a.muted ? '' : 'checked'}> Som ligado</label>
       <label>Volume <input type="range" id="sVol" min="0" max="100" value="${Math.round(a.volume * 100)}"></label>
       <label class="inline"><input type="checkbox" id="sMusic" ${a.music ? 'checked' : ''}> Música ambiente</label>
-      <label class="inline"><input type="checkbox" id="sHap" ${a.haptics ? 'checked' : ''}> Vibração (celular)</label>`;
+      <label class="inline"><input type="checkbox" id="sHap" ${a.haptics ? 'checked' : ''}> Vibração (celular)</label>
+      <div class="row" style="margin-top:6px"><span>Tamanho do texto</span>
+        <button id="sMinus" aria-label="Diminuir o texto" ${scale === SCALES[0] ? 'disabled' : ''}>A−</button>
+        <button id="sPlus" aria-label="Aumentar o texto" ${scale === SCALES[SCALES.length - 1] ? 'disabled' : ''}>A+</button></div>`;
+    const step = (d) => { scale = SCALES[Math.min(SCALES.length - 1, Math.max(0, SCALES.indexOf(scale) + d))]; store.set(SCALE_KEY, String(scale)); applyScale(); paint(); };
+    panel.querySelector('#sMinus').onclick = () => step(-1);
+    panel.querySelector('#sPlus').onclick = () => step(1);
     panel.querySelector('#sMute').onchange = (e) => { setMuted(!e.target.checked); paint(); };
     panel.querySelector('#sVol').oninput = (e) => setAudio({ volume: Number(e.target.value) / 100 });
     panel.querySelector('#sVol').onchange = () => sfx.pop();

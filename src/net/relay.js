@@ -21,12 +21,14 @@ export class Relay {
    * @param {number} [o.maxPeers]       jogadores por sala
    * @param {number} [o.maxRooms]       salas simultâneas
    * @param {number} [o.maxMsgPerSec]   mensagens por segundo por conexão (o excesso é descartado)
+   * @param {boolean} [o.autoPromote]    promove outro jogador quando o host cai (desligado no modo online: lá quem decide é a eleição)
+   * @param {boolean} [o.allowCustomRoom] aceita `create` com código próprio e restauração de snapshot (modo online)
    */
   constructor({
     now = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout,
-    promoteGraceMs = 4000, maxPeers = 16, maxRooms = 100, maxMsgPerSec = 80,
+    promoteGraceMs = 4000, maxPeers = 16, maxRooms = 100, maxMsgPerSec = 80, allowCustomRoom = false, autoPromote = true,
   } = {}) {
-    Object.assign(this, { now, setTimer, clearTimer, promoteGraceMs, maxPeers, maxRooms, maxMsgPerSec });
+    Object.assign(this, { now, setTimer, clearTimer, promoteGraceMs, maxPeers, maxRooms, maxMsgPerSec, allowCustomRoom, autoPromote });
     this.rooms = new Map();
   }
 
@@ -37,6 +39,40 @@ export class Relay {
       message: (msg) => this.#onMessage(ctx, msg),
       close: () => this.#onClose(ctx),
     };
+  }
+
+  // ------------------------------------------------------------ persistência (o servidor pode reiniciar)
+
+  /** Estado das salas em JSON puro (sem conexões): grave em disco e devolva em `importState`. */
+  exportState() {
+    return {
+      v: 1,
+      rooms: [...this.rooms.values()].map((r) => ({
+        code: r.code, hostId: r.hostId, snapshot: r.snapshot,
+        peers: [...r.peers.values()].map((p) => ({ id: p.id, name: p.name, color: p.color, token: p.token, order: p.order })),
+      })),
+    };
+  }
+
+  /** Recria as salas com todos desconectados; quem voltar (mesmo id e token) retoma o lugar. Devolve quantas. */
+  importState(data, graceMs = 20_000) {
+    if (data?.v !== 1) return 0;
+    let n = 0;
+    for (const r of data.rooms ?? []) {
+      if (!r?.code || this.rooms.has(r.code)) continue;
+      const room = { code: r.code, hostId: r.hostId, peers: new Map(), snapshot: r.snapshot ?? null, cleanup: null, restoredUntil: this.now() + graceMs };
+      for (const p of r.peers ?? []) room.peers.set(p.id, { ...p, ctx: null, connected: false });
+      this.rooms.set(room.code, room);
+      room.cleanup = this.#timer(() => { if (![...room.peers.values()].some((p) => p.connected)) this.rooms.delete(room.code); }, EMPTY_ROOM_TTL_MS);
+      if (this.autoPromote) { // se o host não voltar no prazo, o próximo que aparecer assume
+        this.#timer(() => {
+          const h = room.peers.get(room.hostId);
+          if (h && !h.connected && !h.graceTimer) this.#promote(room, room.hostId);
+        }, graceMs);
+      }
+      n += 1;
+    }
+    return n;
   }
 
   // ------------------------------------------------------------ internos
@@ -106,7 +142,7 @@ export class Relay {
     const prev = room.peers.get(id);
     const tk = typeof token === 'string' ? token.slice(0, 64) : '';
     if (prev?.token && prev.token !== tk) return null;
-    if (prev && prev.ctx !== ctx) {
+    if (prev?.ctx && prev.ctx !== ctx) {
       prev.ctx.room = null; // conexão antiga deixa de valer (reconexão do mesmo jogador)
       try { prev.ctx.conn.close(); } catch { /* já caiu */ }
     }
@@ -128,10 +164,14 @@ export class Relay {
   #create(ctx, msg) {
     if (!msg.id) return this.#send(ctx.conn, { t: 'error', message: 'ID ausente.' });
     if (this.rooms.size >= this.maxRooms) return this.#send(ctx.conn, { t: 'error', fatal: true, message: 'Servidor cheio: muitas salas abertas.' });
-    const room = { code: this.#code(), hostId: msg.id, peers: new Map(), snapshot: null, cleanup: null };
+    const custom = this.allowCustomRoom && /^[A-Z]{4,8}$/.test(msg.room ?? '') && !this.rooms.has(msg.room) ? msg.room : null;
+    const restore = this.allowCustomRoom ? msg.restore : null;
+    const room = { code: custom ?? this.#code(), hostId: msg.id, peers: new Map(), snapshot: restore?.snapshot ?? null, cleanup: null };
     this.rooms.set(room.code, room);
     this.#addPeer(ctx, room, msg);
-    this.#send(ctx.conn, { t: 'joined', room: room.code, hostId: msg.id, isHost: true, snapshot: null, peers: this.#peerList(room) });
+    // restauração: quem assume uma sala recebe o snapshot e a lista de jogadores (todos desconectados até voltarem)
+    const peers = restore?.peers ?? this.#peerList(room);
+    this.#send(ctx.conn, { t: 'joined', room: room.code, hostId: msg.id, isHost: true, snapshot: restore?.snapshot ?? null, peers });
   }
 
   #join(ctx, msg) {
@@ -163,6 +203,7 @@ export class Relay {
     const host = room.peers.get(room.hostId);
     if (host?.connected) return;
     if (host?.graceTimer) return; // o host está na tolerância: ainda pode voltar
+    if (room.restoredUntil > this.now()) return; // sala restaurada do disco: dá tempo do host voltar
     if (joinedId !== room.hostId) room.hostId = joinedId; // o próprio host voltando mantém o cargo
   }
 
@@ -174,7 +215,9 @@ export class Relay {
     peer.connected = false;
 
     if (ctx.id === room.hostId) {
-      if (this.promoteGraceMs > 0) {
+      if (!this.autoPromote) {
+        // sem promoção: o relay vive dentro do host; se o host some, o relay some junto
+      } else if (this.promoteGraceMs > 0) {
         // tolerância: se o host voltar (blip de Wi-Fi), nada muda; senão promove o próximo
         peer.graceTimer = this.#timer(() => {
           peer.graceTimer = null;

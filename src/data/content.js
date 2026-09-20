@@ -7,7 +7,7 @@ export { VANGUARDS, VANGUARD_INFO, VANGUARD_PRESETS, EMOJI } from './vanguards.j
 export { THEMES, TONES } from './themes.js';
 
 // Modificadores: a intenção/mensagem que o texto precisa carregar (spec seção 5).
-export const MODIFIERS = [
+const MODIFIERS = [
   'Fale sobre a dor de uma perda',
   'Fale sobre a alegria simples de estar vivo',
   'Culpe algo/alguém externo pelo ocorrido',

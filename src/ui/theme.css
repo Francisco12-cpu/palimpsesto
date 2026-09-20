@@ -18,11 +18,12 @@
   --gold: #d4af37;
   --gold-hi: #f3d97a;
   --gold-dark: #8b6914;
+  --gold-text: #b8993a; /* dourado para TEXTO pequeno (contraste ≥ 4,5:1); --gold-dark fica para bordas */
   --ink: #e8d5b5;
   --text: #cbb98a;
-  --dim: #8d7c55;
+  --dim: #a0906a;
   --wine: #8b1a1a;
-  --red: #d2503f;
+  --red: #e8705e;
   --green: #79b877;
   --f-title: 'Cinzel', 'Trajan Pro', 'Palatino Linotype', Georgia, serif;
   --f-text: 'IM Fell English', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
@@ -32,7 +33,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; font-size: calc(16px * var(--scale, 1)); }
 body {
   min-height: 100vh;
   background: var(--bg);
@@ -42,7 +43,7 @@ body {
     repeating-linear-gradient(45deg, rgba(0, 0, 0, .03) 0 2px, transparent 2px 6px);
   background-attachment: fixed;
   color: var(--text);
-  font: 17px/1.6 var(--f-text);
+  font: calc(17px * var(--scale, 1))/1.6 var(--f-text);
   overflow-x: hidden;
 }
 
@@ -75,7 +76,7 @@ body {
 @keyframes enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.brand-mini { font: 700 .8rem var(--f-title); letter-spacing: 5px; color: var(--gold-dark); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.brand-mini { font: 700 .8rem var(--f-title); letter-spacing: 5px; color: var(--gold-text); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
 .brand-mini .logo { width: 30px; height: 30px; }
 
 h1, h2, h3 { font-family: var(--f-title); color: var(--gold); font-weight: 700; letter-spacing: 1.5px; line-height: 1.25; }
@@ -166,18 +167,18 @@ summary { cursor: pointer; color: var(--gold); font: 600 .8rem var(--f-title); l
 .hero { text-align: center; padding: 16px 0 6px; }
 .hero .logo { display: block; margin: 0 auto; filter: drop-shadow(0 0 22px rgba(212, 175, 55, .35)); } /* parado de propósito: animar o SVG com texto o fazia tremer */
 .hero h1 { letter-spacing: clamp(4px, 2vw, 12px); margin-top: 8px; text-transform: uppercase; }
-.tagline { font: 600 .8rem var(--f-title); letter-spacing: 6px; text-transform: uppercase; color: var(--gold-dark); margin: 4px 0 6px; }
+.tagline { font: 600 .8rem var(--f-title); letter-spacing: 6px; text-transform: uppercase; color: var(--gold-text); margin: 4px 0 6px; }
 .slogan { font-style: italic; color: var(--ink); font-size: 1.15rem; }
-.runes { font-family: var(--f-rune); color: var(--gold-dark); letter-spacing: 6px; font-size: 1.05rem; margin-top: 10px; text-shadow: 0 0 10px rgba(212, 175, 55, .35); }
+.runes { font-family: var(--f-rune); color: var(--gold-text); letter-spacing: 6px; font-size: 1.05rem; margin-top: 10px; text-shadow: 0 0 10px rgba(212, 175, 55, .35); }
 .menu-buttons { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 14px; }
-.foot { text-align: center; margin-top: 34px; font: 600 .7rem var(--f-title); letter-spacing: 3px; color: var(--gold-dark); text-transform: uppercase; }
+.foot { text-align: center; margin-top: 34px; font: 600 .7rem var(--f-title); letter-spacing: 3px; color: var(--gold-text); text-transform: uppercase; }
 
 /* ---------- cabeçalho de fase + timer ---------- */
 .phase-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--gold-dark); position: relative; }
 .phase-head::after { content: '❦'; position: absolute; right: 0; bottom: -.85em; color: var(--gold); background: var(--bg); padding: 0 8px; font-size: 1.3rem; text-shadow: 0 0 10px rgba(212, 175, 55, .6); }
 .phase-ico { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--gold); border: 1px solid var(--gold-dark); background: rgba(212, 175, 55, .08); }
 .phase-title { flex: 1; min-width: 0; }
-.phase-title .k { font: 600 .68rem var(--f-title); letter-spacing: 4px; text-transform: uppercase; color: var(--gold-dark); }
+.phase-title .k { font: 600 .68rem var(--f-title); letter-spacing: 4px; text-transform: uppercase; color: var(--gold-text); }
 .phase-title .v { font: 700 1.25rem var(--f-title); color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 12px; border-radius: 20px; border: 1px solid var(--line); font: 600 .7rem var(--f-title); letter-spacing: 1.2px; color: var(--dim); text-transform: uppercase; margin-top: 3px; }
 .timer { position: relative; width: 62px; height: 62px; flex: none; }
@@ -193,7 +194,7 @@ summary { cursor: pointer; color: var(--gold); font: 600 .8rem var(--f-title); l
 .mission { display: flex; gap: 16px; align-items: flex-start; }
 .mission .info { flex: 1; min-width: 0; }
 .mission .van { font: 900 1.5rem var(--f-title); letter-spacing: 2px; color: var(--gold-hi); text-transform: uppercase; text-shadow: 0 0 16px rgba(212, 175, 55, .4); }
-.mission .lbl { font: 600 .66rem var(--f-title); letter-spacing: 3px; color: var(--gold-dark); text-transform: uppercase; margin-top: 8px; }
+.mission .lbl { font: 600 .66rem var(--f-title); letter-spacing: 3px; color: var(--gold-text); text-transform: uppercase; margin-top: 8px; }
 .mission .val { color: var(--ink); }
 .counter { font-size: .9rem; margin-top: 6px; }
 .counter .bar { height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 4px; }
@@ -231,7 +232,7 @@ summary { cursor: pointer; color: var(--gold); font: 600 .8rem var(--f-title); l
 
 .score-row { display: grid; grid-template-columns: 34px 40px 1fr auto auto; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); margin: 6px 0; animation: enter .4s both; animation-delay: calc(var(--i) * .08s); }
 .score-row.first { border-color: var(--gold-dark); background: linear-gradient(90deg, rgba(212, 175, 55, .16), var(--panel-2)); }
-.score-row .pos { font: 900 1.1rem var(--f-title); color: var(--gold-dark); text-align: center; }
+.score-row .pos { font: 900 1.1rem var(--f-title); color: var(--gold-text); text-align: center; }
 .score-row.first .pos { color: var(--gold-hi); }
 .score-row .name { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .score-row .pts { font: 700 1.15rem var(--f-title); color: var(--gold); min-width: 3.2em; text-align: right; }

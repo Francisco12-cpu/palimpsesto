@@ -1,5 +1,8 @@
-// Modo rede: criar sala / entrar em sala pela rede local (spec seções 6 e 7).
+// Modo rede: criar sala / entrar em sala. Dois transportes com a MESMA interface:
+//  - 'lan'    servidor local (iniciar.bat): WebSocket, funciona sem internet
+//  - 'online' sem servidor (GitHub Pages): ponte MQTT pública criptografada (precisa de internet)
 import { GameClient } from '../net/client.js';
+import { OnlineSession } from '../net/online.js';
 import { CONTENT } from '../data/content.js';
 import { BRAND } from '../brand.js';
 import { mountRoomConfig, loadSavedConfig } from './room-config.js';
@@ -42,19 +45,37 @@ function playerToken() {
 const defaultServer = () => (location.protocol === 'http:' || location.protocol === 'https:' ? location.host : 'localhost:8080');
 const isLocalhost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 
-/** Endereço que os amigos devem abrir (o IP da rede, não "localhost"). */
-let baseUrlPromise = null;
-function joinBase() {
-  baseUrlPromise ??= (async () => {
-    if (!isLocalhost()) return location.origin;
+/** Brokers MQTT próprios (avançado/testes): localStorage 'palimpsesto.brokers' = ["wss://…"]. Sem isso, usa os públicos. */
+function customBrokers() {
+  try {
+    const list = JSON.parse(localStorage.getItem('palimpsesto.brokers') || 'null');
+    return Array.isArray(list) && list.length ? { brokers: list.map(String) } : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Existe o servidor local (serve.mjs) servindo esta página? Se não (ex.: GitHub Pages), o modo é 'online'. */
+let infoPromise = null;
+function serverInfo() {
+  infoPromise ??= (async () => {
     try {
-      const info = await (await fetch('/api/info', { cache: 'no-store' })).json();
-      return info.urls?.[0] ?? location.origin;
+      const r = await fetch('api/info', { cache: 'no-store' }); // relativo: funciona também em /palimpsesto/
+      if (!r.ok) return null;
+      const j = await r.json();
+      return typeof j.port === 'number' ? j : null;
     } catch {
-      return location.origin;
+      return null;
     }
   })();
-  return baseUrlPromise;
+  return infoPromise;
+}
+export const detectTransport = async () => ((await serverInfo()) ? 'lan' : 'online');
+
+/** Endereço que os amigos devem abrir (o IP da rede, não "localhost"). */
+async function joinBase() {
+  if (!isLocalhost()) return location.origin;
+  return (await serverInfo())?.urls?.[0] ?? location.origin;
 }
 
 /**
@@ -62,9 +83,10 @@ function joinBase() {
  * @param {'create'|'join'} o.mode
  * @param {string} [o.code]   código já conhecido (link/QR ou retomada)
  * @param {boolean} [o.auto]  conectar direto, sem tela de formulário
- * @param {string} [o.server] host:porta do servidor
+ * @param {string} [o.server] host:porta do servidor (modo lan)
+ * @param {'auto'|'lan'|'online'} [o.transport] como conectar; 'auto' detecta se há servidor local
  */
-export function startNet(app, { playerName, color, mode, code = '', auto = false, server, onExit }) {
+export function startNet(app, { playerName, color, mode, code = '', auto = false, server, transport: wanted = 'auto', onExit }) {
   const id = playerId();
   let client = null;
   let view = null;
@@ -74,6 +96,7 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
   let gameCtx = null;
   let knownPlayers = null;
   let serverAddr = server || defaultServer();
+  let useOnline = false; // definido em connect()
 
   const setBanner = (text) => {
     const el = document.getElementById('banner');
@@ -103,33 +126,50 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
       <h1>${mode === 'create' ? 'Criar sala' : 'Entrar em sala'}</h1>
       ${location.protocol === 'file:' ? '<p class="err">Abra pelo servidor (iniciar.bat) para jogar em rede.</p>' : ''}
       <form id="f" class="panel">
-        ${mode === 'join' ? `<label>Código da sala <input name="code" maxlength="4" size="6" class="room-code" value="${esc(code)}" style="text-transform:uppercase;width:5.2em;font-size:1.8rem;padding:6px 8px" autofocus autocomplete="off" autocapitalize="characters" spellcheck="false"></label>` : ''}
-        <details><summary>Endereço do servidor</summary>
-          <label>host:porta <input name="server" value="${esc(serverAddr)}" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
-          <p class="dim">Normalmente já está certo (o endereço que você abriu). Só mude se o servidor estiver em outro computador.</p>
+        ${mode === 'join' ? `<label>Código da sala <input name="code" maxlength="6" size="6" class="room-code" value="${esc(code)}" style="text-transform:uppercase;width:7.4em;font-size:1.8rem;padding:6px 8px" autofocus autocomplete="off" autocapitalize="characters" spellcheck="false"></label>` : ''}
+        <p class="dim" id="howconn">Detectando a melhor forma de conectar…</p>
+        <details><summary>Opções de conexão</summary>
+          <label>Modo <select name="transport">
+            <option value="auto" ${wanted === 'auto' ? 'selected' : ''}>Automático</option>
+            <option value="lan" ${wanted === 'lan' ? 'selected' : ''}>Rede local (servidor do iniciar.bat)</option>
+            <option value="online" ${wanted === 'online' ? 'selected' : ''}>Online (sem servidor — precisa de internet)</option>
+          </select></label>
+          <div id="serverBox"><label>Servidor local (host:porta) <input name="server" value="${esc(serverAddr)}" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+          <p class="dim">Só mude se o servidor estiver em outro computador.</p></div>
         </details>
         <p><button class="primary">${icon(mode === 'create' ? 'plus' : 'door', 16)} ${mode === 'create' ? 'Criar sala' : 'Entrar'}</button></p>
         <p id="err" class="err">${esc(prefillError)}</p>
       </form></div>`;
     document.getElementById('back').onclick = () => exit();
+    detectTransport().then((tr) => {
+      const how = document.getElementById('howconn');
+      if (!how) return;
+      how.textContent = tr === 'lan'
+        ? 'Servidor local encontrado: jogo em rede local (funciona sem internet).'
+        : 'Jogo online: os jogadores se conectam pela internet, sem precisar de servidor.';
+      if (tr === 'online') document.getElementById('serverBox').hidden = true;
+    });
     document.getElementById('f').onsubmit = (ev) => {
       ev.preventDefault();
       const f = new FormData(ev.target);
       serverAddr = String(f.get('server'));
-      connect(String(f.get('code') || ''));
+      connect(String(f.get('code') || ''), String(f.get('transport') || wanted));
     };
   }
 
-  function connect(joinCode) {
+  async function connect(joinCode, choice = wanted) {
+    app.innerHTML = '<div class="screen"><p class="dim" style="text-align:center;margin-top:30vh">Conectando…</p></div>';
+    const tr = choice === 'auto' ? await detectTransport() : choice;
+    useOnline = tr === 'online';
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    client = new GameClient({
-      url: `${proto}://${serverAddr}/ws`, id, name: playerName, color, token: playerToken(), content: CONTENT,
+    const common = {
+      id, name: playerName, color, token: playerToken(), content: CONTENT,
       onStatus: (s, info) => {
         if (s === 'connecting') setBanner('Conectando…');
         else if (s === 'reconnecting') setBanner('Conexão perdida — tentando reconectar…');
         else if (s === 'host' && info?.migrated) { setBanner('O host caiu: você assumiu como host e o jogo continua.'); sfx.gong(); }
         else setBanner('');
-        if ((s === 'connected' || s === 'host') && info?.room) session.save({ room: info.room, server: serverAddr, name: playerName });
+        if ((s === 'connected' || s === 'host') && info?.room) session.save({ room: info.room, server: serverAddr, name: playerName, transport: tr });
       },
       onError: (msg, fatal) => {
         if (fatal && !lastView) {
@@ -142,7 +182,8 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
       },
       onKicked: () => exit('Você foi removido da sala pelo host.'),
       onView,
-    });
+    };
+    client = useOnline ? new OnlineSession({ ...common, ...customBrokers() }) : new GameClient({ ...common, url: `${proto}://${serverAddr}/ws` });
     if (mode === 'create') client.create();
     else client.join(joinCode);
     ticker = setInterval(() => view?.tick(), 200);
@@ -205,7 +246,8 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
   async function fillInvite() {
     const box = document.getElementById('invite');
     if (!box || !client?.room) return;
-    const link = `${await joinBase()}/?sala=${client.room}`;
+    // online: o convite abre ESTA mesma página (ex.: GitHub Pages); LAN: o IP do computador que hospeda
+    const link = useOnline ? `${location.origin}${location.pathname}?sala=${client.room}` : `${await joinBase()}/?sala=${client.room}`;
     if (!document.getElementById('invite')) return; // saiu da tela enquanto buscava
     box.innerHTML = `<div class="qr">${qrSvg(link)}</div>
       <div class="linkbox" id="linktxt">${esc(link)}</div>
@@ -230,7 +272,7 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
         <div class="panel gold" style="text-align:center">
           <div class="dim" style="font:600 .7rem var(--f-title);letter-spacing:4px;text-transform:uppercase">Código da sala</div>
           <div class="room-code">${esc(client.room ?? '')}</div>
-          <p class="dim">Amigos na mesma rede escaneiam o QR code ou abrem o link:</p>
+          <p class="dim">${useOnline ? 'Amigos escaneiam o QR code ou abrem o link (todos precisam de internet):' : 'Amigos na mesma rede escaneiam o QR code ou abrem o link:'}</p>
           <div id="invite"><p class="dim">Gerando convite…</p></div>
         </div>
         <div class="panel"><h3>${icon('users', 18)} Jogadores</h3><div class="plist" id="plist"></div></div>
@@ -250,7 +292,7 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
         document.getElementById('cfg').onsubmit = (ev) => {
           ev.preventDefault();
           const err = document.getElementById('err');
-          const invalid = room.validate();
+          const invalid = room.validate(lastView?.players?.filter((p) => p.connected).length ?? 2);
           if (invalid) { err.textContent = invalid; sfx.error(); return; }
           err.textContent = '';
           room.save();

@@ -136,7 +136,7 @@ test('migração de host: o host cai no meio da partida e o jogo continua com o 
   }
 });
 
-test('entrar em partida em andamento com id novo é recusado; sala inexistente também', async () => {
+test('quem chega com a partida em andamento vira espectador (sem segredos, sem ações); sala inexistente dá erro', async () => {
   const srv = await startServer();
   try {
     const ps = await lobbyOf(srv.url, 2, false);
@@ -146,8 +146,12 @@ test('entrar em partida em andamento com id novo é recusado; sala inexistente t
 
     const late = player(srv.url, 'tardio');
     late.c.join(ps[0].c.room);
-    await until(() => late.log.errors.length > 0, 5000, 'erro para retardatário');
-    assert.match(late.log.errors[0], /andamento/);
+    await until(() => late.last()?.spectator === true, 5000, 'retardatário virou espectador');
+    assert.equal(late.last().players.length, 2);
+    assert.ok(Object.values(late.last().assignments).every((a) => !a.vanguard), 'espectador não vê vanguardas');
+    late.c.act({ a: 'done' }); // ações de espectador são ignoradas (sem erro)
+    await new Promise((r) => setTimeout(r, 200));
+    assert.deepEqual(late.log.errors, []);
 
     const ghost = player(srv.url, 'fantasma');
     ghost.c.join('ZZZZ');

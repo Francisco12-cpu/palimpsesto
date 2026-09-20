@@ -110,7 +110,7 @@ export function createGameView(app, ctx) {
           <span class="tag">${esc(a.textType)}</span>
           <div class="lbl">Tema</div><div class="val">${esc(a.theme)}</div>
           ${a.modifier ? `<div class="lbl">Modificador</div><div class="val">${esc(a.modifier)}</div>` : ''}
-          ${a.keywords.length ? `<div class="lbl">Palavras-chave obrigatórias</div><div>${a.keywords.map((k) => `<span class="tag">${esc(k)}</span>`).join('')}</div>` : ''}
+          ${a.keywords.length ? `<div class="lbl">Palavras-chave${s.config.keywordPenalty ? ` (faltar alguma custa ${s.config.keywordPenalty} pt)` : ''}</div><div id="kws">${a.keywords.map((k) => `<span class="tag kw" data-k="${esc(k)}">${esc(k)}</span>`).join('')}</div>` : ''}
         </div>
       </div>
       <details class="tip"><summary>Lembrete do estilo</summary><p>${esc(ABOUT[a.vanguard] ?? '')}</p></details>
@@ -128,6 +128,7 @@ export function createGameView(app, ctx) {
       document.getElementById('lines').innerHTML =
         `${n} caractere(s) — ${ok ? '<span class="hit">mínimo atingido ✓</span>' : `faltam ${a.minChars - n} para o mínimo`}`;
       document.getElementById('cbar').style.width = `${a.minChars ? Math.min(100, (n / a.minChars) * 100) : 100}%`;
+      app.querySelectorAll('#kws [data-k]').forEach((el) => el.classList.toggle('ok', E.keywordUsed(ta.value, el.dataset.k))); // marca as já usadas
     };
     ta.oninput = () => {
       local.round = s.round; local.text = ta.value;
@@ -259,6 +260,7 @@ export function createGameView(app, ctx) {
           <div class="hit">${icon('check', 15)} Acertaram: ${namesOf(t.hits)}</div>
           <div class="miss">${icon('x', 15)} Erraram: ${namesOf(t.misses)}</div>
           <div class="dim">${icon('flag', 14)} Denunciaram: ${namesOf(t.reporters)}</div>
+          ${t.keywords?.total ? `<div class="${t.keywords.missing.length ? 'miss' : 'hit'}">Palavras-chave: ${t.keywords.used}/${t.keywords.total}${t.keywords.missing.length ? ` — faltou: ${t.keywords.missing.map(esc).join(', ')}` : ''}</div>` : ''}
           <div class="dim">Palpites: ${Object.entries(t.guesses).map(([id, l]) => `${nameOf(id)}: ${l.map(esc).join(' / ')}`).join(' · ') || '—'}</div>
         </div></div>`).join('')}
       <div class="divisor">✦</div><h3>Placar</h3>
@@ -272,9 +274,9 @@ export function createGameView(app, ctx) {
     app.querySelectorAll('[data-score]').forEach((el) => countUp(el, Number(el.dataset.from), Number(el.dataset.score)));
 
     const mineHit = r.texts.some((t) => t.hits.includes(me));
-    const gained = r.deltas[me].net;
+    const gained = r.deltas[me]?.net ?? 0;
     if (mineHit || gained > 0) { sfx.success(); haptic([30, 40, 60]); if (gained >= 2) confetti(28); }
-    else if (r.deltas[me].lost) { sfx.fail(); haptic([80, 50, 80]); }
+    else if (r.deltas[me]?.lost) { sfx.fail(); haptic([80, 50, 80]); }
     else sfx.gong();
   }
 
@@ -341,6 +343,16 @@ export function createGameView(app, ctx) {
     haptic([60, 40, 60, 40, 120]);
   }
 
+  /** Quem chegou com a partida em andamento: assiste (sem vanguardas nem ações) e joga na próxima. */
+  function viewSpectator() {
+    const showText = s.phase === 'revealing' || s.phase === 'guessing';
+    const what = { writing: 'Os jogadores estão escrevendo…', reporting: 'Os jogadores estão denunciando textos…', revealing: '', guessing: '' }[s.phase] ?? '';
+    app.innerHTML = `<div class="screen">${header()}
+      <div class="callout"><b>Você está assistindo.</b> Você entra na próxima partida.</div>
+      ${showText ? textPaper() : `<p class="dim">${what}</p>`}
+      <h3>Placar</h3>${scoreTable()}</div>`;
+  }
+
   const VIEWS = {
     writing: viewWriting, revealing: viewRevealing, guessing: viewGuessing,
     reporting: viewReporting, scoring: viewScoring, finished: viewFinished,
@@ -379,7 +391,8 @@ export function createGameView(app, ctx) {
       const k = keyOf();
       if (k !== viewKey) {
         viewKey = k;
-        VIEWS[s.phase]?.();
+        if (s.spectator && s.phase !== 'scoring' && s.phase !== 'finished') viewSpectator();
+        else VIEWS[s.phase]?.();
         timerEl = document.getElementById('timer');
       }
       if (s.phase !== 'scoring') scoreMemo = { ...s.scores };

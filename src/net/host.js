@@ -10,6 +10,9 @@ import * as E from '../engine/engine.js';
 import { normalizeConfig, DEFAULT_CONFIG } from '../engine/config.js';
 import { viewFor } from '../engine/view.js';
 
+/** Tolerância no fim da escrita: o último trecho digitado (enviado no máx. 5×/s) chega antes da captura. */
+export const WRITING_GRACE_MS = 400;
+
 export class GameHost {
   /**
    * @param {object} o
@@ -27,7 +30,10 @@ export class GameHost {
     this.dirty = false;
     this.lobby = snapshot?.lobby ?? { players: [], config: { ...DEFAULT_CONFIG, vanguards: null }, hostId, banned: [] };
     this.lobby.banned ??= [];
+    this.lobby.watchers ??= []; // espectadores: quem chega com a partida em andamento
     this.game = snapshot?.game ?? null;
+    // o snapshot não leva `content` (13 KB iguais em todo cliente): recoloca do conteúdo local
+    if (this.game) this.game.content = { themes: structuredClone(content.themes), modifiers: [...content.modifiers] };
     this.setHost(hostId);
   }
 
@@ -47,6 +53,7 @@ export class GameHost {
     for (const p of peers) {
       if (this.game) {
         if (this.game.players.some((x) => x.id === p.id)) this.#setConnected(p.id, p.connected);
+        else if (!p.connected) this.lobby.watchers = this.lobby.watchers.filter((w) => w.id !== p.id);
       } else if (p.connected) {
         this.#lobbyJoin(p.id, p.name, p.color);
       } else {
@@ -63,10 +70,13 @@ export class GameHost {
     }
     if (this.game) {
       if (!this.game.players.some((p) => p.id === id)) {
-        this.send(id, { t: 'error', fatal: true, message: 'Partida em andamento — aguarde a próxima.' });
-        return;
+        // chegou com a partida em andamento: assiste (e entra na próxima)
+        const w = this.lobby.watchers.find((x) => x.id === id);
+        if (w) { w.connected = true; if (name) w.name = name; if (color != null) w.color = color; }
+        else this.lobby.watchers.push({ id, name: name || 'Jogador', color, connected: true });
+      } else {
+        this.#setConnected(id, true);
       }
-      this.#setConnected(id, true);
     } else {
       this.#lobbyJoin(id, name, color);
     }
@@ -74,7 +84,8 @@ export class GameHost {
   }
 
   peerLeave(id) {
-    if (this.game) this.#setConnected(id, false);
+    if (this.lobby.watchers.some((w) => w.id === id)) this.lobby.watchers = this.lobby.watchers.filter((w) => w.id !== id);
+    else if (this.game) this.#setConnected(id, false);
     else this.#lobbyLeave(id);
     this.#changed();
   }
@@ -99,6 +110,7 @@ export class GameHost {
   /** msg = { a: 'config'|'start'|'rematch'|'draft'|'guess'|'done'|'report', ... } */
   handle(from, msg) {
     if (!msg || typeof msg !== 'object') return;
+    if (this.lobby.watchers.some((w) => w.id === from)) return; // espectador só assiste
     const now = this.now();
     const g = this.game;
     let r = null;
@@ -143,6 +155,8 @@ export class GameHost {
     const players = this.lobby.players.filter((p) => p.connected);
     if (players.length < 2) return this.send(from, { t: 'error', message: 'São necessários pelo menos 2 jogadores.' });
     try {
+      const need = normalizeConfig(this.lobby.config, this.content).vanguards.length;
+      if (need < players.length) return this.send(from, { t: 'error', message: `Selecione pelo menos ${players.length} vanguardas (uma por jogador).` });
       const created = E.createGame({ players, config: this.lobby.config, content: this.content, seed: (Math.random() * 2 ** 32) >>> 0 });
       const r = E.startGame(created, this.now());
       this.game = r.state;
@@ -164,7 +178,10 @@ export class GameHost {
 
   #rematch(from) {
     if (!this.game || this.game.phase !== E.PHASES.FINISHED || from !== this.hostId) return;
-    this.lobby.players = this.game.players.filter((p) => p.connected).map(({ id, name, color }) => ({ id, name, color, connected: true }));
+    // quem só assistia entra na próxima partida
+    const everyone = [...this.game.players, ...this.lobby.watchers].filter((p) => p.connected);
+    this.lobby.players = everyone.map(({ id, name, color }) => ({ id, name, color, connected: true }));
+    this.lobby.watchers = [];
     this.game = null;
     this.#changed();
   }
@@ -172,7 +189,7 @@ export class GameHost {
   /** Avança o relógio do jogo. Chamar a cada ~250 ms. */
   tick() {
     if (!this.game) return;
-    const next = E.tick(this.game, this.now());
+    const next = E.tick(this.game, this.now(), WRITING_GRACE_MS);
     if (next !== this.game) {
       this.game = next;
       this.#changed();
@@ -182,17 +199,21 @@ export class GameHost {
   // ------------------------------------------------------------ saída
 
   viewOf(id) {
-    if (this.game) return { ...viewFor(this.game, id), hostId: this.hostId };
+    if (this.game) {
+      const spectator = this.lobby.watchers.some((w) => w.id === id);
+      return { ...viewFor(this.game, id), hostId: this.hostId, ...(spectator && { spectator: true }) };
+    }
     return { phase: 'lobby', you: id, hostId: this.hostId, players: this.lobby.players, config: this.lobby.config };
   }
 
   broadcast() {
     const players = this.game ? this.game.players : this.lobby.players;
-    for (const p of players) if (p.connected) this.send(p.id, { t: 'view', view: this.viewOf(p.id) });
+    for (const p of [...players, ...(this.game ? this.lobby.watchers : [])]) if (p.connected) this.send(p.id, { t: 'view', view: this.viewOf(p.id) });
   }
 
   snapshot() {
-    return JSON.parse(JSON.stringify({ lobby: this.lobby, game: this.game }));
+    const game = this.game && { ...this.game, content: undefined }; // sem o banco de temas (o receptor usa o dele)
+    return JSON.parse(JSON.stringify({ lobby: this.lobby, game }));
   }
 
   /** Grava o snapshot no relay se houve mudança (chamar periodicamente). */

@@ -36,7 +36,7 @@ export function startSolo(app, { playerName, color, onExit }) {
     document.getElementById('cfg').onsubmit = (ev) => {
       ev.preventDefault();
       const err = document.getElementById('err');
-      const invalid = room.validate();
+      const invalid = room.validate(Number(new FormData(ev.target).get('bots')) + 1);
       if (invalid) { err.textContent = invalid; sfx.error(); return; }
       try {
         solo = createSolo({

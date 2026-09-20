@@ -105,6 +105,7 @@ test('modo rede: criar sala mostra código, QR, link e config; sair limpa a sess
     });
     $('#name').value = 'Ana';
     click($('[data-go=create]'));
+    $('[name=transport]').value = 'lan'; // o DOM de teste não alcança api/info: força o modo servidor local
     $('[name=server]').value = `127.0.0.1:${port}`;
     $('#f').dispatchEvent(ev('submit'));
     await until(() => $('.room-code')?.textContent.length === 4, 8000, 'sala criada');

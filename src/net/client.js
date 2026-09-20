@@ -14,9 +14,10 @@ export class GameClient {
   constructor({
     url, id, name, color, token, content,
     onView = () => {}, onStatus = () => {}, onError = () => {}, onKicked = () => {},
-    WebSocketImpl = globalThis.WebSocket, clock = () => Date.now(),
+    WebSocketImpl = globalThis.WebSocket, clock = () => Date.now(), pingMs = 10_000, reconnectMs = RECONNECT_MS,
   }) {
-    Object.assign(this, { url, id, name, color, token, content, onView, onStatus, onError, onKicked, WS: WebSocketImpl, clock });
+    Object.assign(this, { url, id, name, color, token, content, onView, onStatus, onError, onKicked, WS: WebSocketImpl, clock, pingMs, reconnectMs });
+    this.createExtra = {};
     this.ws = null;
     this.room = null;
     this.host = null;
@@ -34,7 +35,8 @@ export class GameClient {
 
   // ------------------------------------------------------------ API pública
 
-  create() { this.wantCreate = true; this.#open(); }
+  /** `extra` vai junto do pedido de criação (modo online: código escolhido e restauração). */
+  create(extra = {}) { this.wantCreate = true; this.createExtra = extra; this.#open(); }
   join(room) { this.room = String(room).trim().toUpperCase(); this.#open(); }
 
   /** Ação do jogador ({ a: 'draft'|'guess'|'done'|'report'|'config'|'start'|'rematch', ... }). */
@@ -64,7 +66,7 @@ export class GameClient {
     ws.onopen = () => {
       this.tries = 0;
       this.#syncClock();
-      if (this.wantCreate && !this.room) this.#wsSend({ t: 'create', id: this.id, name: this.name, color: this.color, token: this.token });
+      if (this.wantCreate && !this.room) this.#wsSend({ t: 'create', id: this.id, name: this.name, color: this.color, token: this.token, ...this.createExtra });
       else this.#wsSend({ t: 'join', room: this.room, id: this.id, name: this.name, color: this.color, token: this.token });
     };
     ws.onmessage = (ev) => {
@@ -83,7 +85,7 @@ export class GameClient {
         this.onError('Conexão perdida.', true);
         return;
       }
-      setTimeout(() => !this.leaving && this.#open(), RECONNECT_MS);
+      setTimeout(() => !this.leaving && this.#open(), this.reconnectMs);
     };
     ws.onerror = () => {}; // onclose cuida
   }
@@ -93,7 +95,7 @@ export class GameClient {
   #syncClock() {
     const ping = () => this.#wsSend({ t: 'ping', c: this.clock() });
     for (let i = 0; i < 5; i++) setTimeout(ping, i * 120); // rajada inicial: pega a menor latência
-    this.timers.push(setInterval(ping, 10_000));
+    this.timers.push(setInterval(ping, this.pingMs));
   }
 
   #onPong({ c, s }) {
@@ -112,6 +114,7 @@ export class GameClient {
       case 'pong': return this.#onPong(m);
       case 'joined':
         this.room = m.room;
+        this.bestRtt = Infinity; // possível servidor novo (migração): refaz a medida do relógio
         this.onStatus('connected', { room: m.room });
         return m.isHost ? this.#becomeHost(m.snapshot, m.peers) : this.#stopHost();
       case 'promote': return this.#becomeHost(m.snapshot, m.peers, m.oldHostId);

@@ -55,6 +55,7 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
       <p class="dim grp">Tipos permitidos no sorteio</p>
       <div class="grid">${TEXT_TYPES.map((t) => `<label class="inline"><input type="checkbox" name="ttype" value="${t}" ${initial.textTypes.includes(t) ? 'checked' : ''}> ${t}</label>`).join('')}</div>
       ${chk('mods', 'Modificadores (a intenção que o texto precisa carregar)', initial.modifiersEnabled)}
+      ${chk('filter', 'Filtro de palavrões (troca por asteriscos)', initial.filterProfanity)}
     </fieldset>
 
     <fieldset>
@@ -64,6 +65,7 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
         ${num('guesses', 'Palpites por jogador em cada texto', initial.guessesPerPlayer, 1, 5)}
         ${num('quorum', 'Denúncias para punir o autor (quórum)', initial.reportQuorum, 1, 20)}
         ${num('penalty', 'Pontos perdidos na denúncia', initial.reportPenalty, 0, 20)}
+        ${num('kwpen', 'Pontos perdidos se faltar palavra-chave', initial.keywordPenalty, 0, 10, '(0 = só informativo)')}
       </div>
     </fieldset>
 
@@ -118,6 +120,8 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
       guessesPerPlayer: n('guesses'),
       reportQuorum: n('quorum'),
       reportPenalty: n('penalty'),
+      keywordPenalty: n('kwpen'),
+      filterProfanity: field('filter').checked,
       helper: { autocomplete: field('auto').checked, showAllNames: field('all').checked },
       timers: {
         writing: n('t_writing'), revealing: n('t_revealing'), guessing: n('t_guessing'),
@@ -127,9 +131,10 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
   }
 
   /** Mensagem de erro (string) ou null se a config está boa. */
-  function validate() {
+  function validate(players = 2) {
     const c = read();
     if (c.vanguards.length < 2) return 'Selecione pelo menos 2 vanguardas.';
+    if (c.vanguards.length < players) return `Selecione pelo menos ${players} vanguardas (uma por jogador).`;
     if (!c.textTypes.length && !c.fixedTextType) return 'Permita pelo menos 1 tipo de texto.';
     return null;
   }

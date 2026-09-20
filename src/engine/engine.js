@@ -13,6 +13,7 @@
 import { makeRng } from './rng.js';
 import { normalizeConfig } from './config.js';
 import { computeTitles } from './titles.js';
+import { keywordStats, maskProfanity } from './text.js';
 
 export const PHASES = {
   LOBBY: 'lobby',
@@ -180,7 +181,10 @@ function advance(s, now) {
   switch (s.phase) {
     case PHASES.WRITING: {
       // Texto capturado exatamente como está neste instante.
-      s.texts = Object.fromEntries(s.players.map((p) => [p.id, s.drafts[p.id] ?? '']));
+      s.texts = Object.fromEntries(s.players.map((p) => {
+        const raw = s.drafts[p.id] ?? '';
+        return [p.id, s.config.filterProfanity ? maskProfanity(raw) : raw];
+      }));
       const rng = makeRng(s.rngState);
       s.order = rng.shuffle(s.players.map((p) => p.id));
       s.rngState = rng.state();
@@ -231,8 +235,12 @@ function settle(s, now) {
  * Avança o relógio. Chamar periodicamente (o host, ou o driver do modo solo).
  * Devolve a MESMA referência se nada mudou.
  */
-export function tick(state, now) {
-  if (state.phaseEndsAt == null || now < state.phaseEndsAt) return state;
+/**
+ * `graceMs`: tolerância só na ESCRITA (o host usa ~400 ms para o último trecho digitado chegar antes da captura).
+ */
+export function tick(state, now, graceMs = 0) {
+  const grace = state.phase === PHASES.WRITING ? graceMs : 0;
+  if (state.phaseEndsAt == null || now < state.phaseEndsAt + grace) return state;
   const s = clone(state);
   advance(s, now);
   return s;
@@ -325,10 +333,14 @@ export function computeRoundResult(s) {
     for (const id of hits) deltas[id].gained += 1;
     deltas[authorId].gained += hits.length;
     if (denounced) deltas[authorId].lost += s.config.reportPenalty;
+    const text = s.texts[authorId] ?? '';
+    const kw = keywordStats(text, s.assignments[authorId].keywords);
+    if (kw.missing.length && s.config.keywordPenalty > 0) deltas[authorId].lost += s.config.keywordPenalty;
 
     return {
       authorId,
-      text: s.texts[authorId] ?? '',
+      text,
+      keywords: kw, // { total, used, missing[] }
       assignment: s.assignments[authorId],
       vanguard,
       guesses: clone(guesses),
@@ -359,4 +371,5 @@ export function ranking(s) {
 }
 
 /** Caracteres contados no texto sem espaços nas pontas (o que vale pro mínimo). */
+export { keywordUsed, keywordStats } from './text.js';
 export const countChars = (text) => text.trim().length;

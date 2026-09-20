@@ -1,5 +1,5 @@
 // Efeitos visuais leves (nada pesado): poeira dourada, confete, contagem de pontos.
-export const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Partículas de poeira flutuando ao fundo (mesma ideia do menu de exemplo). */
 export function dust(container, count = 22) {
@@ -47,7 +47,7 @@ export function countUp(el, from, to, ms = 900) {
 }
 
 /** Cor estável por nome (avatar). */
-export function hue(str) {
+function hue(str) {
   let h = 0;
   for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360;
   return h;
