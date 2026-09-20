@@ -1,7 +1,7 @@
 {
   "name": "Palimpsesto — o jogo das vanguardas literárias",
   "short_name": "Palimpsesto",
-  "description": "Escreva no estilo de uma vanguarda literária e descubra a escola dos seus amigos.",
+  "description": "Escreva no estilo de uma vanguarda literária e descubra a escola dos seus amigos. Online ou em rede local.",
   "start_url": "./",
   "display": "standalone",
   "orientation": "any",

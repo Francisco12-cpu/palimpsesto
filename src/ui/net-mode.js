@@ -159,7 +159,7 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
   }
 
   async function connect(joinCode, choice = wanted) {
-    app.innerHTML = '<div class="screen"><p class="dim" style="text-align:center;margin-top:30vh">Conectando…</p></div>';
+    app.innerHTML = '<div class="screen connecting"><div class="spinner" role="status" aria-label="Conectando"></div><p class="dim">Conectando…</p></div>';
     const tr = choice === 'auto' ? await detectTransport() : choice;
     useOnline = tr === 'online';
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -188,7 +188,7 @@ export function startNet(app, { playerName, color, mode, code = '', auto = false
     if (mode === 'create') client.create();
     else client.join(joinCode);
     ticker = setInterval(() => view?.tick(), 200);
-    app.innerHTML = '<div class="screen"><p class="dim" style="text-align:center;margin-top:30vh">Conectando…</p></div>';
+    app.innerHTML = '<div class="screen connecting"><div class="spinner" role="status" aria-label="Conectando"></div><p class="dim">Conectando…</p></div>';
   }
 
   // ------------------------------------------------------------ visões

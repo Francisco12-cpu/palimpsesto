@@ -10,7 +10,8 @@
     "serve": "node serve.mjs --open",
     "pack": "node tools/pack.mjs",
     "analyze": "node tools/analyze.mjs",
-    "shot": "node tools/shot.mjs"
+    "shot": "node tools/shot.mjs",
+    "verify:pages": "node tools/verify-pages.mjs"
   },
   "description": "Palimpsesto — jogo multiplayer de escrita sobre vanguardas literárias",
   "devDependencies": {

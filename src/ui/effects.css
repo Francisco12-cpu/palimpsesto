@@ -139,3 +139,9 @@ body.urgent::after { content: ''; position: fixed; inset: 0; z-index: 20; pointe
   .mission .seal { width: 56px !important; height: 56px !important; font-size: 28px !important; }
   .mission .van { font-size: 1.25rem; }
 }
+
+/* indicador de "conectando" */
+.connecting { text-align: center; margin-top: 26vh; }
+.spinner { width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--gold); animation: spin2 1s linear infinite; }
+@keyframes spin2 { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: var(--gold-hi); } }

@@ -5,7 +5,7 @@
 //   npm run analyze                    → relatório no terminal
 //   npm run analyze -- --out=RELATORIO.md   → também grava em arquivo
 //   npm run analyze -- --no-tests      → pula a rodada de testes com cobertura (mais rápido)
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { join, relative, dirname, resolve, extname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -149,6 +149,10 @@ out(`- Limite de mensagens/s, de jogadores por sala e de salas no relay: ${/maxM
 out(`- Token secreto por jogador (impede tomar o lugar de outro que só conhece o id): ${/prev\?\.token/.test(relaySrc) ? '✓' : '⚠ não implementado'}`);
 out(`- Tolerância antes de trocar o host (blips de Wi-Fi): ${/promoteGraceMs/.test(relaySrc) ? '✓' : '⚠ não implementado'}`);
 out(`- Config da sala normalizada no host antes de repassar: ${/normalized/.test(readFileSync(join(root, 'src/net/host.js'), 'utf8')) ? '✓' : '⚠ não'}`);
+const html = readFileSync(join(root, 'index.html'), 'utf8');
+out(`- Content-Security-Policy na página (bloqueia scripts de fora): ${/Content-Security-Policy/.test(html) ? '✓' : '⚠ não'}`);
+out(`- Modo online com mensagens cifradas (AES-GCM) e testamento/eleição de host: ${existsSync(join(root, 'src/net/cipher.js')) && /AES-GCM/.test(readFileSync(join(root, 'src/net/cipher.js'), 'utf8')) ? '✓' : '⚠ não'}`);
+out(`- Testes em navegador real (Edge/Chrome): ${existsSync(join(root, 'test/e2e/e2e.test.js')) ? '✓ (npm run test:e2e)' : '⚠ não'}`);
 out('- Sem autenticação forte: o host é quem cria a sala e tudo é confiança na LAN; o host vê todos os segredos da partida (inerente ao modelo "peer-host")');
 
 // ---------------------------------------------------------------- tamanhos e desempenho
