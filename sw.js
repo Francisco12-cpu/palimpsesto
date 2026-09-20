@@ -1,10 +1,11 @@
 // Service worker: deixa o jogo abrir offline depois da 1ª carga (spec seção 6).
 // Só é aceito em contexto seguro (https ou localhost); em http://IP-da-rede o navegador o ignora.
 // Estratégia: rede primeiro (sempre a versão mais nova), cache como reserva.
-const CACHE = 'palimpsesto-v2';
+const CACHE = 'palimpsesto-v4';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', 'index.html', 'icon.svg', 'manifest.webmanifest', 'src/ui/theme.css', 'src/ui/effects.css'])).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', 'index.html', 'icon.svg', 'manifest.webmanifest', 'src/ui/theme.css', 'src/ui/effects.css',
+    'data/vanguardas.json', 'data/temas.json', 'data/modificadores.json', 'data/tiposTexto.json', 'data/titulos.json', '404.html', 'icon-192.png'])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

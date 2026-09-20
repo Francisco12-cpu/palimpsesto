@@ -26,8 +26,8 @@ entrar, rode `liberar-firewall.bat` uma vez. `npm run pack` gera uma pasta com o
 
 ```bash
 npm install         # só dependências de desenvolvimento (jsdom, puppeteer-core)
-npm test            # 84 testes rápidos
-npm run test:e2e    # testes em navegador real (Edge/Chrome), com dois "aparelhos"
+npm test            # 95 testes rápidos
+npm run test:e2e    # navegadores reais (Edge/Chrome e Firefox), com dois "aparelhos"
 npm run verify:pages  # joga uma partida online completa no site publicado
 npm run analyze     # analisador: tamanho, dependências, segurança, cobertura, desempenho
 ```
@@ -39,7 +39,12 @@ Publicar: `git push` — o GitHub Pages republica sozinho em ~20 s. O jogo em si
 Tudo sobre o estado atual — regras, arquitetura (rede local × online), segurança, métricas, riscos e próximos passos — está em
 [`PROJETO.md`](PROJETO.md).
 
+## Licença
+
+Código sob **MIT**; os textos do jogo (explicações das vanguardas, exemplos, temas) sob
+**CC BY-NC-SA 4.0** — ver [LICENSE](LICENSE).
+
 ## Licenças de terceiros
 
-Fontes Cinzel, IM Fell English e Noto Sans Runic (SIL OFL, ver `fonts/`) e a biblioteca de QR code
+Fontes Cinzel, IM Fell English, Noto Sans Runic, Atkinson Hyperlegible e OpenDyslexic (SIL OFL, ver `fonts/`) e a biblioteca de QR code
 [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT, em `src/vendor/`).

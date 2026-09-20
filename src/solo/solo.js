@@ -57,7 +57,7 @@ export function createSolo({
         schedule(at(0.2, 0.6), (s) => E.updateDraft(s, b.id, botText(s.assignments[b.id], rng)));
         schedule(at(0.65, 0.9), (s, t) => E.markDone(s, b.id, t)); // "Pronto": trava o texto
       }
-    } else if (state.phase === E.PHASES.REVEALING) {
+    } else if (state.phase === E.PHASES.PREVIEW || state.phase === E.PHASES.REVEAL) {
       for (const b of bots) schedule(at(0.3, 0.8), (s, t) => E.markDone(s, b.id, t));
     } else if (state.phase === E.PHASES.GUESSING) {
       const authorId = E.currentAuthorId(state);
@@ -74,10 +74,9 @@ export function createSolo({
         }
       }
     } else if (state.phase === E.PHASES.REPORTING) {
-      for (const b of bots) {
-        for (const authorId of state.order.filter((id) => id !== b.id)) {
-          if (rng.next() < reportChance) schedule(at(0.05, 0.5), (s) => E.toggleReport(s, b.id, authorId));
-        }
+      const authorId = E.currentAuthorId(state); // denúncia é só do texto da vez
+      for (const b of bots.filter((p) => p.id !== authorId)) {
+        if (rng.next() < reportChance) schedule(at(0.05, 0.5), (s) => E.toggleReport(s, b.id, authorId));
         schedule(at(0.6, 0.9), (s, t) => E.markDone(s, b.id, t));
       }
     }

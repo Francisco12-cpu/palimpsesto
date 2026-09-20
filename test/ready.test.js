@@ -16,7 +16,7 @@ test('botão Pronto na escrita: só avança quando TODOS estão prontos, antes d
   assert.equal(s.phase, 'writing'); // c ainda escrevendo
   s = ok(E.updateDraft(s, 'c', 'texto do c'));
   s = ok(E.markDone(s, 'c', T0 + 20));
-  assert.equal(s.phase, 'revealing'); // avançou muito antes de phaseEndsAt do writing
+  assert.equal(s.phase, 'preview'); // avançou muito antes de phaseEndsAt do writing
   assert.equal(s.texts.a, 'texto do a');
   assert.equal(s.texts.c, 'texto do c');
   assert.equal(s.texts.b, '');
@@ -32,12 +32,12 @@ test('depois de Pronto o texto fica travado', () => {
   ok(E.updateDraft(s, 'b', 'ok'));
 });
 
-test('botão Pronto na revelação pula a espera', () => {
+test('botão Pronto na leitura (preview) pula a espera', () => {
   let s = start(['a', 'b']);
-  s = E.tick(s, s.phaseEndsAt); // captura -> revealing texto 0
-  assert.equal(s.phase, 'revealing');
+  s = E.tick(s, s.phaseEndsAt); // captura -> preview do texto 0
+  assert.equal(s.phase, 'preview');
   s = ok(E.markDone(s, 'a', T0));
-  assert.equal(s.phase, 'revealing');
+  assert.equal(s.phase, 'preview');
   s = ok(E.markDone(s, 'b', T0));
   assert.equal(s.phase, 'guessing');
   assert.equal(s.cursor, 0);
@@ -48,7 +48,7 @@ test('desconectado não segura o Pronto geral', () => {
   s = ok(E.markDone(s, 'a', T0));
   s = ok(E.markDone(s, 'b', T0));
   s = ok(E.setConnected(s, 'c', false, T0));
-  assert.equal(s.phase, 'revealing');
+  assert.equal(s.phase, 'preview');
 });
 
 test('Pronto em fases sem ação (pontuação/fim) é recusado', () => {

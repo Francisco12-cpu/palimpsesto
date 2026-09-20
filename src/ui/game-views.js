@@ -7,8 +7,9 @@
 //   ctx.onExit    () => void
 // Devolve { render(state), tick(), destroy() }.
 import * as E from '../engine/engine.js';
+import { topTitlesFor } from '../engine/titles.js';
 import { BRAND } from '../brand.js';
-import { VANGUARD_INFO } from '../data/vanguards.js';
+import { VANGUARD_INFO } from '../data/content.js';
 import { icon, seal } from './icons.js';
 import { avatar, confetti, countUp, splash, bigCount, urgency, shake, announce, keepAwake } from './fx.js';
 import { sfx, haptic } from './sound.js';
@@ -18,15 +19,18 @@ const fold = (x) => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const PHASES = {
   writing: ['Escrevendo', 'pen'],
-  revealing: ['Revelação', 'eye'],
+  preview: ['Leia o texto', 'eye'],
   guessing: ['Palpite', 'target'],
-  reporting: ['Denúncias', 'flag'],
-  scoring: ['Pontuação', 'star'],
+  reveal: ['Resposta', 'scroll'],
+  reporting: ['Denúncia', 'flag'],
+  scoring: ['Placar da rodada', 'star'],
   finished: ['Fim de jogo', 'trophy'],
 };
 const CIRC = 2 * Math.PI * 19;
-const READY_PHASES = ['writing', 'revealing', 'guessing', 'reporting'];
+const TEXT_PHASES = ['preview', 'guessing', 'reveal', 'reporting'];
+const READY_PHASES = ['writing', 'preview', 'guessing', 'reveal', 'reporting'];
 const ABOUT = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v.about]));
+const SHORT = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v.short]));
 
 /** Copia texto (com alternativa para navegadores sem a API de área de transferência). */
 export async function copyText(text) {
@@ -76,7 +80,7 @@ export function createGameView(app, ctx) {
     const [label, ico] = PHASES[s.phase];
     return `<div class="phase-head">
       <div class="phase-ico">${icon(ico, 24)}</div>
-      <div class="phase-title"><div class="k">Rodada ${s.round} de ${s.totalRounds}</div>
+      <div class="phase-title"><div class="k">Rodada ${s.round}/${s.totalRounds}${TEXT_PHASES.includes(s.phase) ? ` · texto ${s.cursor + 1}/${s.order.length}` : ''}</div>
         <div class="v">${label}</div>
         ${READY_PHASES.includes(s.phase) ? `<span class="pill" id="pill">${icon('check', 12)}<span id="ready">${readyCount()}</span></span>` : ''}</div>
       ${s.phaseEndsAt != null ? `<div class="timer" id="timer" role="timer" aria-label="Tempo restante"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="19"/><circle class="prog" id="ring" cx="22" cy="22" r="19" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg><div class="num" id="tnum" aria-hidden="true"></div></div>` : ''}
@@ -107,13 +111,17 @@ export function createGameView(app, ctx) {
         <div class="info">
           <div class="lbl">Sua vanguarda (segredo)</div>
           <div class="van">${esc(a.vanguard)}</div>
-          <span class="tag">${esc(a.textType)}</span>
-          <div class="lbl">Tema</div><div class="val">${esc(a.theme)}</div>
-          ${a.modifier ? `<div class="lbl">Modificador</div><div class="val">${esc(a.modifier)}</div>` : ''}
-          ${a.keywords.length ? `<div class="lbl">Palavras-chave${s.config.keywordPenalty ? ` (faltar alguma custa ${s.config.keywordPenalty} pt)` : ''}</div><div id="kws">${a.keywords.map((k) => `<span class="tag kw" data-k="${esc(k)}">${esc(k)}</span>`).join('')}</div>` : ''}
+          <p class="van-short">${esc(SHORT[a.vanguard] ?? '')}</p>
         </div>
       </div>
-      <details class="tip"><summary>Lembrete do estilo</summary><p>${esc(ABOUT[a.vanguard] ?? '')}</p></details>
+      <div class="panel rules">
+        <div class="rule"><span class="lbl">Tema</span><span class="val">${esc(a.theme)}</span></div>
+        ${a.modifier ? `<div class="rule"><span class="lbl">Modificador</span><span class="val">${esc(a.modifier)}</span></div>` : ''}
+        <div class="rule"><span class="lbl">Tipo de texto</span><span class="val">${esc(a.textType)}</span></div>
+        ${a.keywords.length ? `<div class="rule"><span class="lbl">Palavras-chave${s.config.keywordPenalty ? ` (−${s.config.keywordPenalty} pt se faltar)` : ''}</span>
+          <span class="val" id="kws">${a.keywords.map((k) => `<span class="tag kw" data-k="${esc(k)}">${esc(k)}</span>`).join('')}</span></div>` : ''}
+      </div>
+      <details class="tip"><summary>Como escrever neste estilo</summary><p>${esc(ABOUT[a.vanguard] ?? '')}</p></details>
       <textarea id="draft" placeholder="Escreva no estilo do ${esc(a.vanguard)}… sem revelar o nome!" ${locked ? 'readonly' : ''} spellcheck="true" autocapitalize="sentences" enterkeyhint="enter"></textarea>
       <div class="counter"><span id="lines"></span><div class="bar"><i id="cbar"></i></div></div>
       ${readyBtn('Já terminei — Pronto')}
@@ -150,34 +158,82 @@ export function createGameView(app, ctx) {
     return paperHtml(t.text, by);
   }
 
-  function viewRevealing() {
+  /** Fila de avatares: acende em dourado quem já acertou este texto. */
+  function guessBoard() {
+    const authorId = E.currentAuthorId(s);
+    const hits = s.hits?.[authorId] ?? [];
+    const others = s.players.filter((p) => p.id !== authorId);
+    return `<div class="board" id="board">${others.map((p) => {
+      const rank = hits.indexOf(p.id);
+      const done = s.done.includes(p.id);
+      return `<div class="bplayer ${rank >= 0 ? 'got' : done ? 'spent' : ''}" title="${esc(p.name)}${rank >= 0 ? ' — acertou!' : ''}">
+        ${av(p.id, 40)}<span class="nm">${esc(p.name)}</span>
+        ${rank >= 0 ? `<span class="got-tag">conseguiu! +${E.pointsForRank(s.config, rank)}</span>` : done ? '<span class="dim">—</span>' : ''}</div>`;
+    }).join('')}</div>`;
+  }
+
+  function viewPreview() {
     const a = s.assignments[E.currentAuthorId(s)];
-    app.innerHTML = `<div class="screen">${header()}${textPaper()}
-      <p class="dim">Tema: ${esc(a.theme)} · ${esc(a.textType)}. Leia com atenção — a vanguarda continua secreta.</p>
+    app.innerHTML = `<div class="screen">${header()}
+      <p class="dim">Leia com atenção: em seguida você tenta adivinhar a vanguarda.</p>
+      ${textPaper()}
+      <div class="rule"><span class="lbl">Tema</span><span class="val">${esc(a.theme)}</span></div>
+      <div class="rule"><span class="lbl">Tipo</span><span class="val">${esc(a.textType)}</span></div>
       ${readyBtn('Já li — Pronto')}</div>`;
+    document.getElementById('done').onclick = () => { ctx.actions.done(); haptic(20); };
+  }
+
+  /** Resposta deste texto: vanguarda real, tema, tipo e quem acertou. */
+  function viewReveal() {
+    const authorId = E.currentAuthorId(s);
+    const a = s.assignments[authorId];
+    const hits = s.hits?.[authorId] ?? [];
+    const guessed = Object.keys(s.guesses[authorId] ?? {});
+    const missed = guessed.filter((id) => !hits.includes(id));
+    const iHit = hits.includes(me);
+    app.innerHTML = `<div class="screen">${header()}
+      <div class="panel gold reveal-card">
+        ${seal(a.vanguard, 72)}
+        <div><div class="lbl">${nameOf(authorId)} escreveu em</div>
+          <div class="van">${esc(a.vanguard)}</div>
+          <p class="van-short">${esc(SHORT[a.vanguard] ?? '')}</p></div>
+      </div>
+      <div class="rule"><span class="lbl">Tema</span><span class="val">${esc(a.theme)}</span></div>
+      <div class="rule"><span class="lbl">Tipo de texto</span><span class="val">${esc(a.textType)}</span></div>
+      ${a.modifier ? `<div class="rule"><span class="lbl">Modificador</span><span class="val">${esc(a.modifier)}</span></div>` : ''}
+      ${authorId === me ? '' : `<p class="${iHit ? 'hit' : 'miss'}" style="font-weight:700">${iHit ? `${icon('check', 16)} Você acertou!` : `${icon('x', 16)} Você não acertou este.`}</p>`}
+      <div class="panel">
+        <div class="hit">${icon('check', 15)} Acertaram: ${hits.length ? hits.map((id, i) => `${nameOf(id)} <small>(+${E.pointsForRank(s.config, i)})</small>`).join(', ') : '—'}</div>
+        <div class="miss">${icon('x', 15)} Erraram: ${namesOf(missed)}</div>
+      </div>
+      ${textPaper()}
+      ${readyBtn('Pronto')}</div>`;
     document.getElementById('done').onclick = () => { ctx.actions.done(); haptic(20); };
   }
 
   function viewGuessing() {
     const authorId = E.currentAuthorId(s);
     const mine = s.guesses[authorId]?.[me] ?? [];
-    const left = s.config.guessesPerPlayer - mine.length;
+    const iHit = E.hasHit(s, me, authorId);
+    const left = E.guessesLeft(s, me, authorId);
     const h = s.config.helper;
     const isMe = authorId === me;
     const canGuess = !isMe && left > 0 && !s.done.includes(me);
     app.innerHTML = `<div class="screen">${header()}${textPaper()}
-      ${isMe ? `<p class="dim">É o seu texto — aguarde os palpites dos outros.</p>${readyBtn()}` : `
+      ${guessBoard()}
+      ${isMe ? `<p class="dim">É o seu texto — veja quem consegue descobrir.</p>${readyBtn()}` : `
       <div class="panel">
-        <h3>Qual é a vanguarda?</h3>
-        <p>Palpites restantes: <b class="hit">${left}</b>
-          ${mine.map((m) => `<span class="tag">${esc(m)}</span>`).join('')}</p>
+        ${iHit ? `<h3 class="hit">${icon('check', 18)} Você acertou!</h3><p class="dim">Aguarde os outros — a resposta aparece em seguida.</p>`
+          : `<h3>Qual é a vanguarda?</h3>
+        <p>Palpites restantes: <b class="${left ? 'hit' : 'miss'}">${left}</b>
+          ${mine.map((m) => `<span class="tag wrong">${esc(m)}</span>`).join('')}</p>
+        ${mine.length && !iHit ? `<p class="miss" id="wrongmsg">${icon('x', 15)} Não é ${esc(mine[mine.length - 1])}. ${left ? 'Tente de novo!' : 'Seus palpites acabaram.'}</p>` : ''}`}
         ${canGuess ? `<form id="g" class="guess-box" autocomplete="off">
           <div class="row"><input name="v" id="gin" placeholder="Digite o nome da vanguarda…" style="flex:1;min-width:0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
             <button class="primary">${icon('send', 16)} Palpitar</button></div>
           ${h.autocomplete ? '<ul class="suggest" id="sug"></ul>' : ''}
           <p id="gerr" class="err"></p></form>` : ''}
-        ${h.showAllNames ? `<div class="chips">${s.config.vanguards.map((v) => `<button type="button" data-fill="${esc(v)}">${esc(v)}</button>`).join('')}</div>` : ''}
-        <p class="dim" style="margin-top:10px">O resultado (acerto ou erro) só aparece no fim da rodada.</p>
+        ${h.showAllNames && !iHit ? `<div class="chips">${s.config.vanguards.filter((v) => !mine.includes(v)).map((v) => `<button type="button" data-fill="${esc(v)}">${esc(v)}</button>`).join('')}</div>` : ''}
       </div>${readyBtn(left > 0 ? 'Pronto (abrir mão dos palpites)' : 'Pronto')}`}</div>`;
     document.getElementById('done').onclick = () => { ctx.actions.done(); haptic(20); };
     if (!canGuess) return;
@@ -230,19 +286,19 @@ export function createGameView(app, ctx) {
 
   function viewReporting() {
     const q = E.effectiveQuorum(s);
+    const id = E.currentAuthorId(s);
+    const a = s.assignments[id];
+    const rep = s.reports[id] ?? [];
+    const mine = rep.includes(me);
     app.innerHTML = `<div class="screen">${header()}
-      <p class="dim">Denuncie textos que não têm nada a ver com o tema. Com ${q} denúncia(s) o autor perde ${s.config.reportPenalty} ponto(s).</p>
-      ${s.order.map((id) => {
-        const rep = s.reports[id] ?? [];
-        const a = s.assignments[id];
-        const mine = rep.includes(me);
-        return `<div class="panel">
-          ${paperHtml(s.texts[id] ?? '', `${av(id, 26)} ${nameOf(id)}`, true)}
-          <div class="dim">Tema: ${esc(a.theme)}</div>
-          <div class="row" style="margin-top:8px"><span>${icon('flag', 16)} ${rep.length}/${q} — ${namesOf(rep)}</span>
-          ${id === me ? '' : `<button data-rep="${id}" class="${mine ? 'on' : ''}" style="margin-left:auto">${mine ? 'Retirar denúncia' : 'Denunciar'}</button>`}</div></div>`;
-      }).join('')}
-      ${readyBtn('Terminei — Pronto')}</div>`;
+      <p class="dim">Este texto tinha a ver com o tema? Com ${q} denúncia(s), ${nameOf(id)} perde ${s.config.reportPenalty} ponto(s).</p>
+      <div class="rule"><span class="lbl">Tema</span><span class="val">${esc(a.theme)}</span></div>
+      ${paperHtml(s.texts[id] ?? '', `${av(id, 26)} ${nameOf(id)} — ${esc(a.vanguard ?? '')}`, true)}
+      <div class="panel">
+        <div class="row"><span>${icon('flag', 16)} ${rep.length}/${q} ${rep.length ? `— ${namesOf(rep)}` : ''}</span>
+        ${id === me ? '<span class="dim">É o seu texto.</span>' : `<button data-rep="${esc(id)}" class="${mine ? 'on' : ''}" style="margin-left:auto">${mine ? 'Retirar denúncia' : 'Fugiu do tema'}</button>`}</div>
+      </div>
+      ${readyBtn('Pronto')}</div>`;
     app.querySelectorAll('[data-rep]').forEach((b) => { b.onclick = () => { ctx.actions.report(b.dataset.rep); haptic(15); }; });
     document.getElementById('done').onclick = () => { ctx.actions.done(); haptic(20); };
   }
@@ -250,32 +306,35 @@ export function createGameView(app, ctx) {
   function viewScoring() {
     const r = s.lastResult;
     const ranked = E.ranking(s);
+    const top = Math.max(1, ranked[0]?.score ?? 1);
     app.innerHTML = `<div class="screen">${header()}
-      ${r.texts.map((t, i) => `<div class="panel result" style="--i:${i}">
-        <div class="head">${seal(t.vanguard, 46)}
-          <div><div class="dim">${nameOf(t.authorId)} escreveu em</div>
-          <b style="font:700 1.05rem var(--f-title);color:var(--gold);letter-spacing:1px;text-transform:uppercase">${esc(t.vanguard)}</b></div>
-          ${t.denounced ? `<span class="flagged" style="margin-left:auto">${icon('flag', 14)} denúncia válida</span>` : ''}</div>
+      <h2 style="text-align:center;margin-top:0">Placar</h2>
+      <div class="kahoot">${ranked.map((p, i) => {
+        const d = r.deltas[p.id] ?? { net: 0, lost: 0 };
+        const before = scoreMemo[p.id] ?? 0;
+        return `<div class="krow ${i === 0 ? 'first' : ''}" style="--i:${i}">
+          <span class="pos">${i + 1}</span>${av(p.id, 40)}
+          <div class="kbar-wrap"><div class="kname">${esc(p.name)}</div>
+            <div class="kbar"><i style="width:${Math.round((before / top) * 100)}%" data-w="${Math.round((p.score / top) * 100)}"></i></div></div>
+          <span class="pts" data-score="${p.score}" data-from="${before}">${before}</span>
+          <span class="delta ${d.net > 0 ? 'up' : d.net < 0 ? 'down' : ''}">${d.net > 0 ? '+' : ''}${d.net || '·'}${d.lost ? ` <small>(−${d.lost})</small>` : ''}</span>
+        </div>`;
+      }).join('')}</div>
+      <details class="tip"><summary>Como foi cada texto</summary>${r.texts.map((x) => `<div class="panel result">
+        <div class="head">${seal(x.vanguard, 40)}<div><div class="dim">${nameOf(x.authorId)} escreveu em</div>
+          <b style="font:700 1rem var(--f-title);color:var(--gold);letter-spacing:1px;text-transform:uppercase">${esc(x.vanguard)}</b></div>
+          ${x.denounced ? `<span class="flagged" style="margin-left:auto">${icon('flag', 14)} denunciado</span>` : ''}</div>
         <div class="verdict">
-          <div class="hit">${icon('check', 15)} Acertaram: ${namesOf(t.hits)}</div>
-          <div class="miss">${icon('x', 15)} Erraram: ${namesOf(t.misses)}</div>
-          <div class="dim">${icon('flag', 14)} Denunciaram: ${namesOf(t.reporters)}</div>
-          ${t.keywords?.total ? `<div class="${t.keywords.missing.length ? 'miss' : 'hit'}">Palavras-chave: ${t.keywords.used}/${t.keywords.total}${t.keywords.missing.length ? ` — faltou: ${t.keywords.missing.map(esc).join(', ')}` : ''}</div>` : ''}
-          <div class="dim">Palpites: ${Object.entries(t.guesses).map(([id, l]) => `${nameOf(id)}: ${l.map(esc).join(' / ')}`).join(' · ') || '—'}</div>
-        </div></div>`).join('')}
-      <div class="divisor">✦</div><h3>Placar</h3>
-      ${ranked.map((p, i) => {
-        const d = r.deltas[p.id];
-        return `<div class="score-row ${i === 0 ? 'first' : ''}" style="--i:${i}">
-          <span class="pos">${i + 1}</span>${av(p.id, 36)}<span class="name">${esc(p.name)}</span>
-          <span class="pts" data-score="${p.score}" data-from="${scoreMemo[p.id] ?? 0}">${scoreMemo[p.id] ?? 0}</span>
-          <span class="delta ${d.net > 0 ? 'up' : d.net < 0 ? 'down' : ''}">${d.net > 0 ? '+' : ''}${d.net || '·'}${d.lost ? ` <small>(−${d.lost} ${icon('flag', 12)})</small>` : ''}</span></div>`;
-      }).join('')}</div>`;
+          <div class="hit">${icon('check', 15)} ${x.hits.length ? x.hits.map((id, i) => `${nameOf(id)} <small>(+${E.pointsForRank(s.config, i)})</small>`).join(', ') : 'ninguém acertou'}</div>
+          <div class="miss">${icon('x', 15)} ${namesOf(x.misses)}</div>
+          ${x.keywords?.total ? `<div class="${x.keywords.missing.length ? 'miss' : 'hit'}">Palavras-chave: ${x.keywords.used}/${x.keywords.total}${x.keywords.missing.length ? ` — faltou: ${x.keywords.missing.map(esc).join(', ')}` : ''}</div>` : ''}
+        </div></div>`).join('')}</details></div>`;
+
+    requestAnimationFrame(() => app.querySelectorAll('.kbar i').forEach((el) => { el.style.width = `${el.dataset.w}%`; }));
     app.querySelectorAll('[data-score]').forEach((el) => countUp(el, Number(el.dataset.from), Number(el.dataset.score)));
 
-    const mineHit = r.texts.some((t) => t.hits.includes(me));
     const gained = r.deltas[me]?.net ?? 0;
-    if (mineHit || gained > 0) { sfx.success(); haptic([30, 40, 60]); if (gained >= 2) confetti(28); }
+    if (gained > 0) { sfx.success(); haptic([30, 40, 60]); if (gained >= 3) confetti(28); }
     else if (r.deltas[me]?.lost) { sfx.fail(); haptic([80, 50, 80]); }
     else sfx.gong();
   }
@@ -315,14 +374,27 @@ export function createGameView(app, ctx) {
         <div>${av(p.id, 48)}</div><div class="nm">${medal[p.id]} ${esc(p.name)}</div>
         <div class="step">${p.score}</div></div>`).join('')}</div>
       ${ranked.slice(3).map((p, i) => `<div class="score-row" style="--i:${i}"><span class="pos">${i + 4}</span>${av(p.id, 36)}<span class="name">${esc(p.name)}</span><span class="pts">${p.score}</span><span></span></div>`).join('')}
-      <div class="divisor">✦</div><h2 style="text-align:center;margin-top:0">Títulos</h2>
-      ${s.titles.length ? s.titles.map((t, i) => `<div class="panel title-card" style="--i:${i}"><span class="em">${BRAND.emoji ? t.emoji : icon('trophy', 30)}</span>
-        <div><b>${esc(t.label)}</b><div>${namesOf(t.playerIds)}</div><div class="dim">${esc(t.detail)}</div></div></div>`).join('')
-        : '<p class="dim" style="text-align:center">Nenhum título desta vez.</p>'}
+      <div class="divisor">✦</div><h2 style="text-align:center;margin-top:0">Destaques</h2>
+      ${(() => {
+        const rows = ranked.map((p) => ({ p, badges: topTitlesFor(s.titles, p.id, 3) })).filter((x) => x.badges.length);
+        if (!rows.length) return '<p class="dim" style="text-align:center">Ninguém se destacou em nada desta vez.</p>';
+        return rows.map(({ p, badges }, i) => `<div class="panel badge-row" style="--i:${i}">
+          <div class="who">${av(p.id, 34)} <b>${esc(p.name)}</b></div>
+          <div class="badges">${badges.map((b) => `<button type="button" class="badge" data-desc="${esc(b.description || b.detail)}" aria-label="${esc(b.label)}: ${esc(b.description || b.detail)}">
+            <span class="em">${BRAND.emoji ? b.emoji : icon('trophy', 20)}</span><span class="bl">${esc(b.label)}</span></button>`).join('')}</div>
+        </div>`).join('');
+      })()}
+      <p class="dim" id="badgetip" style="text-align:center;min-height:1.4em"></p>
       <p class="row" style="justify-content:center;margin-top:20px">
         ${ctx.onAgain ? `<button id="again" class="primary">${icon('play', 16)} Jogar de novo</button>` : '<span class="dim">Aguardando o host reiniciar…</span>'}
         <button id="exit" class="ghost">Sair</button></p>
       ${anthologyHtml()}</div>`;
+    const tip = document.getElementById('badgetip');
+    app.querySelectorAll('.badge').forEach((b) => {
+      const show = () => { tip.textContent = b.dataset.desc; app.querySelectorAll('.badge').forEach((x) => x.classList.toggle('on', x === b)); };
+      b.onclick = show;
+      b.onmouseenter = show;
+    });
     document.getElementById('again')?.addEventListener('click', ctx.onAgain);
     document.getElementById('exit').onclick = ctx.onExit;
     const flash = (btn, msg) => { const old = btn.innerHTML; btn.textContent = msg; setTimeout(() => { btn.innerHTML = old; }, 1600); };
@@ -345,8 +417,8 @@ export function createGameView(app, ctx) {
 
   /** Quem chegou com a partida em andamento: assiste (sem vanguardas nem ações) e joga na próxima. */
   function viewSpectator() {
-    const showText = s.phase === 'revealing' || s.phase === 'guessing';
-    const what = { writing: 'Os jogadores estão escrevendo…', reporting: 'Os jogadores estão denunciando textos…', revealing: '', guessing: '' }[s.phase] ?? '';
+    const showText = TEXT_PHASES.includes(s.phase);
+    const what = s.phase === 'writing' ? 'Os jogadores estão escrevendo…' : '';
     app.innerHTML = `<div class="screen">${header()}
       <div class="callout"><b>Você está assistindo.</b> Você entra na próxima partida.</div>
       ${showText ? textPaper() : `<p class="dim">${what}</p>`}
@@ -354,23 +426,24 @@ export function createGameView(app, ctx) {
   }
 
   const VIEWS = {
-    writing: viewWriting, revealing: viewRevealing, guessing: viewGuessing,
+    writing: viewWriting, preview: viewPreview, guessing: viewGuessing, reveal: viewReveal,
     reporting: viewReporting, scoring: viewScoring, finished: viewFinished,
   };
 
   /** Só remonta o DOM quando algo visível mudou (não perde foco/texto no textarea). */
   function keyOf() {
     const base = `${s.round}:${s.phase}:${s.cursor}:${s.done.includes(me)}`;
-    if (s.phase === 'guessing') return `${base}:${(s.guesses[s.order[s.cursor]]?.[me] ?? []).join('|')}`;
-    if (s.phase === 'reporting') return `${base}:${JSON.stringify(s.reports)}`;
+    const author = s.order[s.cursor];
+    if (s.phase === 'guessing') return `${base}:${(s.guesses[author]?.[me] ?? []).join('|')}:${(s.hits?.[author] ?? []).join('|')}:${s.done.join('|')}`;
+    if (s.phase === 'reporting') return `${base}:${(s.reports[author] ?? []).join('|')}`;
     return base;
   }
 
-  const PHASE_SFX = { writing: sfx.start, revealing: sfx.page, guessing: sfx.chime, reporting: sfx.gong };
+  const PHASE_SFX = { writing: sfx.start, preview: sfx.page, guessing: sfx.chime, reveal: sfx.whoosh, reporting: sfx.gong };
   const SPLASH = {
     writing: () => splash('Escrevam', `Rodada ${s.round} de ${s.totalRounds}`),
-    reporting: () => splash('Denúncias', 'Algo fora do tema?'),
-    scoring: () => splash('Pontuação', 'A vanguarda revelada'),
+    guessing: () => splash('Palpite!', `Texto ${s.cursor + 1} de ${s.order.length}`),
+    scoring: () => splash('Placar', `Fim da rodada ${s.round}`),
   };
 
   return {
@@ -414,7 +487,7 @@ export function createGameView(app, ctx) {
       if (!tnum || !ring) return;
       tnum.textContent = secs;
       ring.style.strokeDashoffset = CIRC * (1 - Math.min(1, rem / baseline));
-      const timed = s.phase !== 'scoring' && s.phase !== 'revealing'; // leitura de texto não tem contagem dramática
+      const timed = s.phase === 'writing' || s.phase === 'guessing'; // só escrita e palpite têm contagem dramática
       const urgent = timed && (secs <= 5 || (s.phase === 'writing' && secs <= 10));
       timerEl.classList.toggle('urgent', urgent);
       urgency(timed && secs <= 5);

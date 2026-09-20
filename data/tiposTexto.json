@@ -1,0 +1,11 @@
+{
+  "tipos": [
+    "poema",
+    "carta",
+    "conto",
+    "diário",
+    "manifesto",
+    "discurso",
+    "bilhete"
+  ]
+}

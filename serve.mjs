@@ -34,8 +34,8 @@ const types = {
 };
 
 // Só o que o navegador precisa (não expõe testes, ferramentas nem o servidor).
-const PUBLIC_FILES = new Set(['index.html', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png']);
-const PUBLIC_DIRS = ['src' + sep, 'fonts' + sep];
+const PUBLIC_FILES = new Set(['index.html', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og.png', '404.html', 'LICENSE']);
+const PUBLIC_DIRS = ['src' + sep, 'fonts' + sep, 'data' + sep];
 const isPublic = (rel) => PUBLIC_FILES.has(rel) || PUBLIC_DIRS.some((d) => rel.startsWith(d));
 
 function lanUrls(port) {
@@ -70,7 +70,7 @@ const relay = new Relay();
 let port = basePort;
 
 // As salas sobrevivem a um reinício do servidor: o estado vai para data/rooms.json a cada mudança.
-const DATA_DIR = join(root, 'data');
+const DATA_DIR = join(root, '.state'); // estado de execução (não é conteúdo do jogo)
 const ROOMS_FILE = join(DATA_DIR, 'rooms.json');
 let lastSaved = '';
 function saveRooms() {

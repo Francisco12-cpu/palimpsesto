@@ -80,3 +80,17 @@ test('vibração só quando ligada e com som ativo', () => {
   setAudio({ muted: false });
   setTimeout(() => process.exit(process.exitCode ?? 0), 50).unref();
 });
+
+test('faixas de música: três opções, troca reinicia o compasso e o andamento muda', async () => {
+  const { TRACKS } = await import('../src/ui/sound.js');
+  assert.equal(TRACKS.length, 3);
+  assert.deepEqual(TRACKS.map((t) => t.id), ['pergaminho', 'tinta', 'festa']);
+  assert.ok(new Set(TRACKS.map((t) => t.barMs)).size === 3, 'cada faixa tem andamento próprio');
+  setAudio({ muted: false, music: true, track: 'festa' });
+  music.stop();
+  const n = made.osc;
+  music.restart();
+  assert.ok(made.osc > n, 'a faixa nova toca');
+  assert.equal(audioSettings().track, 'festa');
+  music.stop();
+});

@@ -49,9 +49,9 @@ test('filtro de palavrões: mascara sem quebrar o resto do texto; só quando lig
 test('tolerância no fim da escrita: o motor espera só na fase de escrita', () => {
   const s = start();
   assert.equal(E.tick(s, s.phaseEndsAt + 100, 400), s); // ainda dentro da tolerância
-  assert.equal(E.tick(s, s.phaseEndsAt + 401, 400).phase, 'revealing');
+  assert.equal(E.tick(s, s.phaseEndsAt + 401, 400).phase, 'preview');
   let r = E.tick(s, s.phaseEndsAt); // sem tolerância: avança
-  assert.equal(r.phase, 'revealing');
+  assert.equal(r.phase, 'preview');
   assert.notEqual(E.tick(r, r.phaseEndsAt, 400), r); // fora da escrita a tolerância não vale
 });
 
@@ -71,7 +71,7 @@ test('host: rascunho digitado dentro da tolerância entra no texto capturado', (
   assert.equal(host.game.phase, 'writing');
   host.handle('h', { a: 'draft', text: 'último trecho' });
   now.t = end + WRITING_GRACE_MS + 1; host.tick();
-  assert.equal(host.game.phase, 'revealing');
+  assert.equal(host.game.phase, 'preview');
   assert.equal(host.game.texts.h, 'último trecho');
 });
 
@@ -84,7 +84,7 @@ test('host: snapshot não leva o banco de temas e a restauração o recoloca', (
   const back = GameHost.fromSnapshot(snap, { content: CONTENT, hostId: 'p1', now: () => 1000, send: () => {} });
   assert.equal(back.game.content.themes.length, CONTENT.themes.length);
   back.game.phase = 'writing'; // continua jogável
-  assert.equal(E.tick(back.game, back.game.phaseEndsAt + 1000, 0).phase, 'revealing');
+  assert.equal(E.tick(back.game, back.game.phaseEndsAt + 1000, 0).phase, 'preview');
 });
 
 test('host recusa iniciar com menos vanguardas do que jogadores', () => {

@@ -8,7 +8,8 @@
 //   nunca quebre com entrada inválida de um cliente.
 // - Jogadores são uma lista genérica: { id, name, isBot?, connected? }.
 //
-// Fluxo: lobby → [writing → (revealing → guessing)×N textos → reporting → scoring]×rodadas → finished
+// Fluxo: lobby → [writing → (preview → guessing → reveal → reporting)×N textos → scoring]×rodadas → finished
+// Cada texto é tratado sozinho: lê, palpita, descobre a resposta e denuncia antes de passar ao próximo.
 
 import { makeRng } from './rng.js';
 import { normalizeConfig } from './config.js';
@@ -18,9 +19,10 @@ import { keywordStats, maskProfanity } from './text.js';
 export const PHASES = {
   LOBBY: 'lobby',
   WRITING: 'writing',
-  REVEALING: 'revealing',
+  PREVIEW: 'preview', // leitura rápida do texto, antes de abrir os palpites
   GUESSING: 'guessing',
-  REPORTING: 'reporting',
+  REVEAL: 'reveal', // resposta daquele texto: vanguarda, quem acertou e quem errou
+  REPORTING: 'reporting', // denúncia só daquele texto
   SCORING: 'scoring',
   FINISHED: 'finished',
 };
@@ -41,7 +43,7 @@ export function createGame({ players, config, content, seed = Date.now() }) {
   return {
     version: 1,
     config: cfg,
-    content: { themes: clone(content.themes), modifiers: [...content.modifiers] },
+    content: { themes: clone(content.themes), modifiers: [...content.modifiers], titles: clone(content.titles ?? []) },
     rngState: seed >>> 0,
     players: players.map((p) => ({ id: p.id, name: p.name, ...(p.color != null && { color: p.color }), isBot: !!p.isBot, connected: p.connected !== false })),
     scores: Object.fromEntries(players.map((p) => [p.id, 0])),
@@ -54,7 +56,8 @@ export function createGame({ players, config, content, seed = Date.now() }) {
     texts: {}, // { playerId: texto } — capturado quando o tempo acaba
     order: [], // ordem de revelação (ids dos autores)
     cursor: 0, // índice do texto atual em `order`
-    guesses: {}, // { autorId: { palpiteiroId: [vanguardas] } } — resultado fica oculto até 'scoring'
+    guesses: {}, // { autorId: { palpiteiroId: [vanguardas] } } — os palpites de cada um são privados
+    hits: {}, // { autorId: [ids na ORDEM em que acertaram] } — público: é o que acende o avatar
     reports: {}, // { autorId: [denunciantesIds] } — público durante 'reporting'
     done: [], // jogadores que já terminaram a fase atual (guessing/reporting)
     usedThemes: [],
@@ -130,13 +133,14 @@ function enterWriting(s, now) {
   s.order = [];
   s.cursor = 0;
   s.guesses = {};
+  s.hits = {};
   s.reports = {};
   s.done = [];
 }
 
-function enterRevealing(s, now) {
-  s.phase = PHASES.REVEALING;
-  s.phaseEndsAt = now + durationMs(s, 'revealing');
+function enterPreview(s, now) {
+  s.phase = PHASES.PREVIEW;
+  s.phaseEndsAt = now + durationMs(s, 'preview');
   s.done = [];
 }
 
@@ -146,10 +150,16 @@ function enterGuessing(s, now) {
   s.done = [s.order[s.cursor]]; // o autor não palpita no próprio texto
 }
 
+function enterReveal(s, now) {
+  s.phase = PHASES.REVEAL;
+  s.phaseEndsAt = now + durationMs(s, 'reveal');
+  s.done = [];
+}
+
 function enterReporting(s, now) {
   s.phase = PHASES.REPORTING;
   s.phaseEndsAt = now + durationMs(s, 'reporting');
-  s.done = [];
+  s.done = [s.order[s.cursor]]; // ninguém denuncia o próprio texto
 }
 
 /** Quórum efetivo: nunca maior que o nº de possíveis denunciantes (todos menos o autor). */
@@ -189,20 +199,23 @@ function advance(s, now) {
       s.order = rng.shuffle(s.players.map((p) => p.id));
       s.rngState = rng.state();
       s.cursor = 0;
-      enterRevealing(s, now);
+      enterPreview(s, now);
       break;
     }
-    case PHASES.REVEALING:
+    case PHASES.PREVIEW:
       enterGuessing(s, now);
       break;
     case PHASES.GUESSING:
-      if (s.cursor + 1 < s.order.length) {
-        s.cursor += 1;
-        enterRevealing(s, now);
-      } else enterReporting(s, now);
+      enterReveal(s, now);
+      break;
+    case PHASES.REVEAL:
+      enterReporting(s, now);
       break;
     case PHASES.REPORTING:
-      enterScoring(s, now);
+      if (s.cursor + 1 < s.order.length) {
+        s.cursor += 1;
+        enterPreview(s, now);
+      } else enterScoring(s, now);
       break;
     case PHASES.SCORING:
       if (s.round < s.totalRounds) {
@@ -224,8 +237,8 @@ function allDone(s) {
 // Botão "Pronto": em toda fase com tempo de jogador. Se todos os conectados estiverem
 // prontos, a fase avança sem esperar o timer.
 const canFinishEarly = (s) =>
-  s.phase === PHASES.WRITING || s.phase === PHASES.REVEALING ||
-  s.phase === PHASES.GUESSING || s.phase === PHASES.REPORTING;
+  s.phase === PHASES.WRITING || s.phase === PHASES.PREVIEW || s.phase === PHASES.GUESSING ||
+  s.phase === PHASES.REVEAL || s.phase === PHASES.REPORTING;
 
 function settle(s, now) {
   if (canFinishEarly(s) && allDone(s)) advance(s, now);
@@ -269,6 +282,7 @@ export function submitGuess(state, playerId, vanguard, now) {
   const authorId = state.order[state.cursor];
   if (playerId === authorId) return fail(state, 'Você não palpita no próprio texto.');
   if (!state.config.vanguards.includes(vanguard)) return fail(state, 'Vanguarda inválida.');
+  if ((state.hits[authorId] ?? []).includes(playerId)) return fail(state, 'Você já acertou este texto.');
   const mine = state.guesses[authorId]?.[playerId] ?? [];
   if (mine.length >= state.config.guessesPerPlayer) return fail(state, 'Sem palpites restantes.');
   if (mine.includes(vanguard)) return fail(state, 'Você já palpitou essa vanguarda.');
@@ -276,9 +290,26 @@ export function submitGuess(state, playerId, vanguard, now) {
   const s = clone(state);
   s.guesses[authorId] ??= {};
   s.guesses[authorId][playerId] = [...mine, vanguard];
-  if (mine.length + 1 >= s.config.guessesPerPlayer && !s.done.includes(playerId)) s.done.push(playerId);
+  const right = vanguard === s.assignments[authorId].vanguard;
+  if (right) {
+    // acerto é público (acende o avatar de quem acertou) e guarda a ORDEM, que vale pontos
+    s.hits[authorId] ??= [];
+    if (!s.hits[authorId].includes(playerId)) s.hits[authorId].push(playerId);
+  }
+  // acabou a vez de quem acertou ou gastou todos os palpites
+  if ((right || mine.length + 1 >= s.config.guessesPerPlayer) && !s.done.includes(playerId)) s.done.push(playerId);
   settle(s, now);
   return ok(s);
+}
+
+/** Acertou a vanguarda do texto atual? (público; é o que o cliente usa para o "você errou"/avatar aceso) */
+export const hasHit = (s, playerId, authorId = s.order[s.cursor]) => (s.hits[authorId] ?? []).includes(playerId);
+
+/** Palpites que ainda restam a este jogador no texto atual. */
+export function guessesLeft(s, playerId, authorId = s.order[s.cursor]) {
+  if (authorId == null || playerId === authorId) return 0;
+  if (hasHit(s, playerId, authorId)) return 0;
+  return Math.max(0, s.config.guessesPerPlayer - (s.guesses[authorId]?.[playerId] ?? []).length);
 }
 
 /** "Pronto" — vale em qualquer fase de jogador. Na escrita trava o texto; no palpite abre mão dos restantes. */
@@ -296,6 +327,7 @@ export function toggleReport(state, playerId, authorId) {
   if (state.phase !== PHASES.REPORTING) return fail(state, 'Não é hora de denunciar.');
   if (!hasPlayer(state, playerId) || !hasPlayer(state, authorId)) return fail(state, 'Jogador desconhecido.');
   if (playerId === authorId) return fail(state, 'Você não pode denunciar o próprio texto.');
+  if (authorId !== state.order[state.cursor]) return fail(state, 'Só dá para denunciar o texto que está sendo mostrado.');
   const s = clone(state);
   const list = s.reports[authorId] ?? [];
   s.reports[authorId] = list.includes(playerId) ? list.filter((id) => id !== playerId) : [...list, playerId];
@@ -313,11 +345,14 @@ export function setConnected(state, playerId, connected, now) {
 
 // ---------------------------------------------------------------- pontuação
 
+/** Pontos de quem acertou em Nº lugar (a escala `hitPoints`; o último valor vale para os demais). */
+export const pointsForRank = (config, rank) => config.hitPoints[Math.min(rank, config.hitPoints.length - 1)];
+
 /**
- * Regras (spec seção 2):
- *  +1 pra cada jogador que acertar a vanguarda (no máx. 1 acerto por texto, mesmo com vários palpites)
- *  +1 pro autor por cada jogador que acertou
- *  denúncia com quórum: autor perde `reportPenalty` (o piso em 0 é aplicado em enterScoring)
+ * Regras:
+ *  quem acerta ganha conforme a ORDEM em que acertou aquele texto (padrão 3 / 2 / 1…)
+ *  o autor ganha `authorPointPerHit` por cada pessoa que acertou a vanguarda dele
+ *  denúncia com quórum e palavras-chave faltando descontam do autor (o piso em 0 é aplicado em enterScoring)
  */
 export function computeRoundResult(s) {
   const quorum = effectiveQuorum(s);
@@ -325,13 +360,17 @@ export function computeRoundResult(s) {
   const texts = s.order.map((authorId) => {
     const vanguard = s.assignments[authorId].vanguard;
     const guesses = s.guesses[authorId] ?? {};
-    const hits = Object.keys(guesses).filter((id) => guesses[id].includes(vanguard));
+    const hits = (s.hits[authorId] ?? []).filter((id) => deltas[id]); // já na ordem em que acertaram
     const misses = Object.keys(guesses).filter((id) => guesses[id].length && !hits.includes(id));
     const reporters = s.reports[authorId] ?? [];
     const denounced = reporters.length >= quorum;
 
-    for (const id of hits) deltas[id].gained += 1;
-    deltas[authorId].gained += hits.length;
+    const points = {};
+    hits.forEach((id, rank) => {
+      points[id] = pointsForRank(s.config, rank);
+      deltas[id].gained += points[id];
+    });
+    deltas[authorId].gained += hits.length * s.config.authorPointPerHit;
     if (denounced) deltas[authorId].lost += s.config.reportPenalty;
     const text = s.texts[authorId] ?? '';
     const kw = keywordStats(text, s.assignments[authorId].keywords);
@@ -345,6 +384,7 @@ export function computeRoundResult(s) {
       vanguard,
       guesses: clone(guesses),
       hits,
+      points, // { playerId: pontos que aquele acerto valeu }
       misses,
       reporters: [...reporters],
       denounced,
@@ -355,8 +395,8 @@ export function computeRoundResult(s) {
 
 // ---------------------------------------------------------------- consultas
 
-export const currentAuthorId = (s) =>
-  s.phase === PHASES.REVEALING || s.phase === PHASES.GUESSING ? s.order[s.cursor] : null;
+const TEXT_PHASES = [PHASES.PREVIEW, PHASES.GUESSING, PHASES.REVEAL, PHASES.REPORTING];
+export const currentAuthorId = (s) => (TEXT_PHASES.includes(s.phase) ? s.order[s.cursor] : null);
 
 export function currentText(s) {
   const authorId = currentAuthorId(s);

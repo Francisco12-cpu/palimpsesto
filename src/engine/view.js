@@ -1,32 +1,36 @@
 // Visão filtrada do estado para um jogador específico (usada pelo host na rede).
 // O estado completo tem segredos (vanguardas dos outros, rascunhos, palpites alheios);
 // cada cliente só recebe o que já pode saber naquele momento.
+//
+// A regra, agora que é um texto por vez: a vanguarda de um texto só aparece a partir da
+// fase `reveal` daquele texto (e continua visível depois). Acertos (`hits`) são públicos
+// desde o palpite — é o que acende o avatar de quem já acertou.
 import { PHASES } from './engine.js';
 
 const stripVanguard = ({ vanguard, ...rest }) => rest;
 
 export function viewFor(s, me) {
-  const revealed = s.phase === PHASES.SCORING || s.phase === PHASES.FINISHED;
+  const roundOver = s.phase === PHASES.SCORING || s.phase === PHASES.FINISHED;
+  // textos já resolvidos nesta rodada: os anteriores ao atual, mais o atual a partir do reveal
+  const resolved = new Set(roundOver ? s.order : s.order.slice(0, s.cursor));
+  if (!roundOver && (s.phase === PHASES.REVEAL || s.phase === PHASES.REPORTING)) resolved.add(s.order[s.cursor]);
 
   const assignments = {};
   for (const [id, a] of Object.entries(s.assignments)) {
-    assignments[id] = revealed || id === me ? a : stripVanguard(a);
+    assignments[id] = resolved.has(id) || id === me ? a : stripVanguard(a);
   }
 
-  // Palpites: só os próprios (o resultado geral chega em lastResult na pontuação).
+  // Palpites: só os próprios, até o texto ser resolvido.
   const guesses = {};
   for (const [authorId, byPlayer] of Object.entries(s.guesses)) {
-    if (revealed) guesses[authorId] = byPlayer;
+    if (resolved.has(authorId)) guesses[authorId] = byPlayer;
     else if (byPlayer[me]) guesses[authorId] = { [me]: byPlayer[me] };
   }
 
-  // Textos: na revelação/palpite só os já revelados; na denúncia todos; na escrita nenhum.
+  // Textos: durante a rodada só os já mostrados; na escrita, nenhum.
   let texts = {};
-  if (s.phase === PHASES.REVEALING || s.phase === PHASES.GUESSING) {
-    for (const id of s.order.slice(0, s.cursor + 1)) texts[id] = s.texts[id];
-  } else if (s.phase !== PHASES.WRITING) {
-    texts = s.texts;
-  }
+  if (roundOver) texts = s.texts;
+  else if (s.phase !== PHASES.WRITING) for (const id of s.order.slice(0, s.cursor + 1)) texts[id] = s.texts[id];
 
   return {
     version: s.version,
@@ -44,6 +48,7 @@ export function viewFor(s, me) {
     order: s.order,
     cursor: s.cursor,
     guesses,
+    hits: s.hits, // público: quem já acertou cada texto, na ordem
     reports: s.reports,
     done: s.done,
     lastResult: s.lastResult,

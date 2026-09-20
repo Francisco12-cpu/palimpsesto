@@ -157,9 +157,12 @@ test('limites: sala cheia, servidor cheio de salas e taxa de mensagens', () => {
   assert.match(b.last('error').message, /cheia/);
   other.h.message({ t: 'create', id: 'o', name: 'O' });
   assert.match(other.last('error').message, /cheio/);
-  // taxa: só as 5 primeiras mensagens da janela chegam ao host
+  // taxa: só as 5 primeiras mensagens da janela do jogador chegam ao host
   for (let i = 0; i < 20; i++) a.h.message({ t: 'act', msg: { i } });
   assert.equal(h.c.inbox.filter((m) => m.t === 'from').length < 6, true);
+  // o host tem orçamento por jogador (uma mudança de estado = uma mensagem para cada um)
+  for (let i = 0; i < 12; i++) h.h.message({ t: 'to', to: 'a', msg: { t: 'view', i } });
+  assert.ok(a.c.inbox.filter((m) => m.t === 'msg').length > 5, 'o host não é cortado como um jogador comum');
   tick(1100); // nova janela
   a.h.message({ t: 'act', msg: { i: 'depois' } });
   assert.ok(h.c.inbox.some((m) => m.t === 'from' && m.msg.i === 'depois'));

@@ -6,7 +6,7 @@ import { startNet, session } from './net-mode.js';
 import { esc } from './game-views.js';
 import { icon, logo, seal } from './icons.js';
 import { dust, watermark, installRipple } from './fx.js';
-import { audioSettings, setAudio, setMuted, sfx, music } from './sound.js';
+import { audioSettings, setAudio, setMuted, sfx, music, TRACKS } from './sound.js';
 
 const app = document.getElementById('app');
 const NAME_KEY = 'palimpsesto.name';
@@ -66,7 +66,7 @@ function menu() {
         <button class="big" data-go="about">${icon('scroll')} Sobre as vanguardas</button>
       </div>
     </div>
-    <div class="foot">${BRAND.author} · <a href="#" id="credits" style="text-decoration:none">${BRAND.instagram}</a></div>
+    <div class="foot"><a href="#" id="creditsName" class="credit-link">${BRAND.author}</a> · <a href="#" id="credits" class="credit-link">${BRAND.instagram}</a></div>
   </div>`;
 
   const nameValue = () => document.getElementById('name').value.trim();
@@ -77,7 +77,9 @@ function menu() {
     return n;
   };
 
-  document.getElementById('credits').onclick = (e) => { e.preventDefault(); credits(); };
+  for (const el of [document.getElementById('credits'), document.getElementById('creditsName')]) {
+    el.onclick = (e) => { e.preventDefault(); credits(); };
+  }
   document.getElementById('swatches').onclick = (e) => {
     const b = e.target.closest('[data-h]');
     if (!b) return;
@@ -169,6 +171,19 @@ function credits() {
 }
 
 // ------------------------------------------------------------------ tamanho do texto
+const FONTS = [
+  { id: 'jogo', label: 'Do jogo (clássica)' },
+  { id: 'legivel', label: 'Mais legível' },
+  { id: 'dislexia', label: 'Para dislexia' },
+];
+const FONT_KEY = 'palimpsesto.font';
+let fontId = FONTS.some((f) => f.id === store.get(FONT_KEY)) ? store.get(FONT_KEY) : 'jogo';
+const applyFont = () => {
+  if (fontId === 'jogo') document.documentElement.removeAttribute('data-font');
+  else document.documentElement.setAttribute('data-font', fontId);
+};
+applyFont();
+
 const SCALES = [0.9, 1, 1.15, 1.3];
 const SCALE_KEY = 'palimpsesto.scale';
 let scale = Number(store.get(SCALE_KEY, '1'));
@@ -192,6 +207,8 @@ function settingsPanel() {
       <label class="inline"><input type="checkbox" id="sMute" ${a.muted ? '' : 'checked'}> Som ligado</label>
       <label>Volume <input type="range" id="sVol" min="0" max="100" value="${Math.round(a.volume * 100)}"></label>
       <label class="inline"><input type="checkbox" id="sMusic" ${a.music ? 'checked' : ''}> Música ambiente</label>
+      <label>Faixa <select id="sTrack" ${a.music ? '' : 'disabled'}>${TRACKS.map((tr) => `<option value="${tr.id}" ${a.track === tr.id ? 'selected' : ''}>${tr.label}</option>`).join('')}</select></label>
+      <label>Fonte <select id="sFont">${FONTS.map((f) => `<option value="${f.id}" ${fontId === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}</select></label>
       <label class="inline"><input type="checkbox" id="sHap" ${a.haptics ? 'checked' : ''}> Vibração (celular)</label>
       <div class="row" style="margin-top:6px"><span>Tamanho do texto</span>
         <button id="sMinus" aria-label="Diminuir o texto" ${scale === SCALES[0] ? 'disabled' : ''}>A−</button>
@@ -202,7 +219,9 @@ function settingsPanel() {
     panel.querySelector('#sMute').onchange = (e) => { setMuted(!e.target.checked); paint(); };
     panel.querySelector('#sVol').oninput = (e) => setAudio({ volume: Number(e.target.value) / 100 });
     panel.querySelector('#sVol').onchange = () => sfx.pop();
-    panel.querySelector('#sMusic').onchange = (e) => { setAudio({ music: e.target.checked }); if (e.target.checked) music.start(); };
+    panel.querySelector('#sMusic').onchange = (e) => { setAudio({ music: e.target.checked }); if (e.target.checked) music.start(); paint(); };
+    panel.querySelector('#sTrack').onchange = (e) => { setAudio({ track: e.target.value }); music.restart(); };
+    panel.querySelector('#sFont').onchange = (e) => { fontId = e.target.value; store.set(FONT_KEY, fontId); applyFont(); };
     panel.querySelector('#sHap').onchange = (e) => setAudio({ haptics: e.target.checked });
   };
   btn.onclick = (e) => {

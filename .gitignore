@@ -8,4 +8,4 @@ Thumbs.db
 exeplo visual menu.html
 
 # estado das salas do servidor local (gerado em execução)
-data/
+.state/

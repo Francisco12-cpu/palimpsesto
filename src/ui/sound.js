@@ -2,7 +2,7 @@
 // (nenhum arquivo de som: leve e offline). O navegador só libera áudio depois de um gesto
 // do usuário; o contexto nasce no primeiro toque.
 const KEY = 'palimpsesto.audio.v2';
-const defaults = { muted: false, volume: 0.7, music: true, haptics: true };
+const defaults = { muted: false, volume: 0.7, music: true, haptics: true, track: 'pergaminho' };
 let cfg = { ...defaults };
 try { cfg = { ...defaults, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { /* ok */ }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch { /* ok */ } };
@@ -112,9 +112,34 @@ export const sfx = {
 };
 
 // ------------------------------------------------------------------ música ambiente
-// Pad lento + sinos esparsos numa escala pentatônica menor, com eco. Gerada por código.
-const SCALE = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33]; // A menor pentatônica + extras
-const CHORDS = [[110, 165, 220], [98, 147, 196], [87.31, 130.81, 174.61], [98, 147, 196]]; // Am · G · F · G (graves)
+// Três faixas geradas por código (nenhum arquivo): cada uma tem escala, acordes, andamento
+// e timbre próprios. A escolha fica nas configurações.
+
+export const TRACKS = [
+  {
+    id: 'pergaminho',
+    label: 'Pergaminho (calma)',
+    barMs: 4800, padDur: 5.2, bells: [2, 4], bellGap: [1, 2], wave: 'sawtooth', cutoff: 700, bellMul: 2,
+    scale: [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33],
+    chords: [[110, 165, 220], [98, 147, 196], [87.31, 130.81, 174.61], [98, 147, 196]],
+  },
+  {
+    id: 'tinta',
+    label: 'Tinta (grave e lenta)',
+    barMs: 7000, padDur: 7.4, bells: [1, 2], bellGap: [2, 3], wave: 'triangle', cutoff: 480, bellMul: 1,
+    scale: [146.83, 174.61, 196, 233.08, 261.63, 293.66],
+    chords: [[73.42, 110, 146.83], [65.41, 98, 130.81], [82.41, 123.47, 164.81], [65.41, 98, 130.81]],
+  },
+  {
+    id: 'festa',
+    label: 'Festa (animada)',
+    barMs: 3000, padDur: 3.2, bells: [4, 7], bellGap: [0.28, 0.5], wave: 'square', cutoff: 1100, bellMul: 3,
+    scale: [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25],
+    chords: [[130.81, 196, 261.63], [174.61, 261.63, 349.23], [196, 293.66, 392], [164.81, 246.94, 329.63]],
+  },
+];
+const trackOf = (id) => TRACKS.find((x) => x.id === id) ?? TRACKS[0];
+
 let musicTimer = null;
 let bar = 0;
 let delayNode = null;
@@ -134,21 +159,21 @@ function ensureDelay(c) {
   return d;
 }
 
-function pad(f, at, dur) {
+function pad(track, f, at, dur) {
   const c = ac();
   if (!c) return;
   const t = c.currentTime + at;
   const g = c.createGain();
   const lp = c.createBiquadFilter();
   lp.type = 'lowpass';
-  lp.frequency.value = 700;
+  lp.frequency.value = track.cutoff;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(0.5, t + dur * 0.35);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   g.connect(lp).connect(musicBus);
   for (const detune of [-6, 5]) {
     const o = c.createOscillator();
-    o.type = 'sawtooth';
+    o.type = track.wave;
     o.frequency.value = f;
     o.detune.value = detune;
     o.connect(g);
@@ -157,14 +182,14 @@ function pad(f, at, dur) {
   }
 }
 
-function bell(f, at) {
+function bell(track, f, at) {
   const c = ac();
   if (!c) return;
   const t = c.currentTime + at;
   const o = c.createOscillator();
   const g = c.createGain();
   o.type = 'sine';
-  o.frequency.value = f * 2;
+  o.frequency.value = f * track.bellMul;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
@@ -177,10 +202,17 @@ function bell(f, at) {
 
 function playBar() {
   if (cfg.muted || !cfg.music || !ac()) return;
-  const chord = CHORDS[bar % CHORDS.length];
-  chord.forEach((f) => pad(f, 0, 5.2));
-  const n = 2 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < n; i++) bell(SCALE[Math.floor(Math.random() * SCALE.length)], 0.6 + i * (1 + Math.random()) );
+  const track = trackOf(cfg.track);
+  const chord = track.chords[bar % track.chords.length];
+  chord.forEach((f) => pad(track, f, 0, track.padDur));
+  const [lo, hi] = track.bells;
+  const n = lo + Math.floor(Math.random() * (hi - lo + 1));
+  const [gLo, gHi] = track.bellGap;
+  let at = 0.4;
+  for (let i = 0; i < n; i++) {
+    bell(track, track.scale[Math.floor(Math.random() * track.scale.length)], at);
+    at += gLo + Math.random() * (gHi - gLo);
+  }
   bar += 1;
 }
 
@@ -188,11 +220,18 @@ export const music = {
   start() {
     if (musicTimer || cfg.muted || !cfg.music || !ac()) return;
     playBar();
-    musicTimer = setInterval(playBar, 4800);
+    musicTimer = setInterval(playBar, trackOf(cfg.track).barMs);
+    musicTimer.unref?.();
   },
   stop() {
     clearInterval(musicTimer);
     musicTimer = null;
+  },
+  /** Troca de faixa: reinicia o compasso com o novo andamento. */
+  restart() {
+    this.stop();
+    bar = 0;
+    this.start();
   },
 };
 

@@ -14,7 +14,7 @@ function game(ids = ['a', 'b', 'c'], config = {}, seed = 42) {
   return ok(E.startGame(s, T0));
 }
 
-/** Todos escrevem e o tempo acaba: cai na 1ª revelação. */
+/** Todos escrevem e o tempo acaba: cai na leitura (preview) do 1º texto. */
 function toReveal(s) {
   for (const p of s.players) s = ok(E.updateDraft(s, p.id, `texto de ${p.id}\nlinha 2`));
   return E.tick(s, s.phaseEndsAt);
@@ -77,7 +77,7 @@ test('texto é capturado como está quando o tempo acaba; sem rascunho = vazio',
   let s = game();
   s = ok(E.updateDraft(s, 'a', 'meio de uma fra'));
   s = E.tick(s, s.phaseEndsAt);
-  assert.equal(s.phase, 'revealing');
+  assert.equal(s.phase, 'preview');
   assert.equal(s.texts.a, 'meio de uma fra');
   assert.equal(s.texts.b, '');
   assert.ok(E.updateDraft(s, 'a', 'x').error); // depois de capturado, não edita mais
@@ -97,9 +97,11 @@ test('fluxo de fases: revelação/palpite por texto, depois denúncia, pontuaç�
     seq.push(`${s.phase}${s.cursor}`);
     s = E.tick(s, s.phaseEndsAt);
   }
-  assert.deepEqual(seq, [
-    'revealing0', 'guessing0', 'revealing1', 'guessing1', 'revealing2', 'guessing2',
-    'reporting2', 'scoring2',
+  assert.deepEqual(seq, [ // um texto por vez: ler, palpitar, ver a resposta, denunciar
+    'preview0', 'guessing0', 'reveal0', 'reporting0',
+    'preview1', 'guessing1', 'reveal1', 'reporting1',
+    'preview2', 'guessing2', 'reveal2', 'reporting2',
+    'scoring2',
   ]);
   assert.equal(s.round, 2);
   assert.deepEqual(s.guesses, {});
@@ -122,8 +124,8 @@ test('palpite: valida autor, vanguarda, limite e repetição', () => {
   assert.ok(E.submitGuess(s, g1, 'Cubismo literário', T0).error); // acabou o limite
   assert.equal(s.phase, 'guessing'); // g2 ainda não terminou
   s = ok(E.markDone(s, g2, T0)); // g2 abre mão -> todos prontos -> avança
-  assert.equal(s.phase, 'revealing');
-  assert.equal(s.cursor, 1);
+  assert.equal(s.phase, 'reveal'); // a resposta deste texto vem antes do próximo
+  assert.equal(s.cursor, 0);
 });
 
 test('fase termina cedo quando todos terminam; desconectado não segura', () => {
@@ -133,63 +135,82 @@ test('fase termina cedo quando todos terminam; desconectado não segura', () => 
   s = ok(E.submitGuess(s, g1, 'Barroco', T0));
   assert.equal(s.phase, 'guessing');
   s = ok(E.setConnected(s, g2, false, T0));
-  assert.equal(s.phase, 'revealing'); // g2 caiu; o jogo segue sem esperar
+  assert.equal(s.phase, 'reveal'); // g2 caiu; o jogo segue sem esperar
 });
 
-test('denúncia: alterna, não denuncia o próprio texto, só na fase certa', () => {
+test('denúncia: só do texto da vez, alterna, e não vale para o próprio texto', () => {
   let s = toReveal(game(['a', 'b', 'c']));
-  assert.ok(E.toggleReport(s, 'a', 'b').error);
+  assert.ok(E.toggleReport(s, 'a', 'b').error); // ainda é preview
   while (s.phase !== 'reporting') s = E.tick(s, s.phaseEndsAt);
-  assert.ok(E.toggleReport(s, 'a', 'a').error);
-  s = ok(E.toggleReport(s, 'a', 'b'));
-  assert.deepEqual(s.reports.b, ['a']);
-  s = ok(E.toggleReport(s, 'a', 'b'));
-  assert.equal(s.reports.b, undefined);
+  const alvo = E.currentAuthorId(s);
+  const outro = s.order.find((id) => id !== alvo);
+  const quem = s.players.map((p) => p.id).find((id) => id !== alvo);
+  assert.ok(E.toggleReport(s, alvo, alvo).error); // próprio texto
+  assert.ok(E.toggleReport(s, quem, outro).error); // texto que não está em exibição
+  s = ok(E.toggleReport(s, quem, alvo));
+  assert.deepEqual(s.reports[alvo], [quem]);
+  s = ok(E.toggleReport(s, quem, alvo));
+  assert.equal(s.reports[alvo], undefined);
 });
 
 /** Joga UMA rodada com palpites/denúncias controlados e devolve o estado em 'scoring'. */
 function playRound(ids, config, guessFn, reports = []) {
   let s = toReveal(game(ids, config));
-  while (s.phase !== 'reporting') {
+  while (s.phase !== 'scoring') {
+    const author = E.currentAuthorId(s);
     if (s.phase === 'guessing') {
-      const author = E.currentAuthorId(s);
       for (const id of ids.filter((x) => x !== author)) {
         const v = guessFn(s, id, author);
         if (v) s = ok(E.submitGuess(s, id, v, s.phaseEndsAt - 1));
       }
       if (s.phase !== 'guessing') continue;
+    } else if (s.phase === 'reporting') {
+      for (const [by, on] of reports.filter(([, on]) => on === author)) s = ok(E.toggleReport(s, by, on));
     }
     s = E.tick(s, s.phaseEndsAt);
   }
-  for (const [by, on] of reports) s = ok(E.toggleReport(s, by, on));
-  return E.tick(s, s.phaseEndsAt);
+  return s;
 }
 
 const right = (st, id, author) => st.assignments[author].vanguard;
 const wrong = (st, id, author) => st.config.vanguards.find((v) => v !== st.assignments[author].vanguard);
 
-test('pontuação: +1 pra quem acerta e +1 pro autor por acerto; erro não pontua', () => {
+test('pontuação por ordem de acerto: 1º ganha 3, 2º ganha 2; autor ganha 1 por acerto', () => {
   const s = playRound(['a', 'b', 'c'], {}, (st, id, author) => (author === 'c' ? right(st, id, author) : wrong(st, id, author)));
   assert.equal(s.phase, 'scoring');
-  assert.deepEqual(s.scores, { a: 1, b: 1, c: 2 });
+  assert.deepEqual(s.scores, { a: 3, b: 2, c: 2 }); // a acertou primeiro, b depois; c é o autor (1+1)
   const rc = s.lastResult.texts.find((t) => t.authorId === 'c');
-  assert.deepEqual([...rc.hits].sort(), ['a', 'b']);
+  assert.deepEqual(rc.hits, ['a', 'b'], 'a ordem dos acertos é preservada');
+  assert.deepEqual(rc.points, { a: 3, b: 2 });
   assert.equal(s.lastResult.deltas.c.net, 2);
 });
 
-test('acertar em qualquer dos vários palpites conta 1 vez por texto', () => {
+test('escala de pontos é configurável e o último valor vale para todos os demais', () => {
+  const s = playRound(['a', 'b', 'c', 'd'], { hitPoints: [5, 1] }, (st, id, author) => (author === 'd' ? right(st, id, author) : wrong(st, id, author)));
+  const rd = s.lastResult.texts.find((t) => t.authorId === 'd');
+  assert.deepEqual(rd.points, { a: 5, b: 1, c: 1 });
+  assert.equal(s.scores.d, 3); // autor: 1 por acerto recebido
+});
+
+test('erro não revela a resposta e dá direito a nova tentativa; depois de acertar, acabou', () => {
   let s = toGuessing(game(['a', 'b', 'c'], { guessesPerPlayer: 3 }));
   const author = E.currentAuthorId(s);
   const g = s.players.map((p) => p.id).find((id) => id !== author);
   const real = s.assignments[author].vanguard;
   const others = s.config.vanguards.filter((v) => v !== real);
-  s = ok(E.submitGuess(s, g, others[0], T0));
-  s = ok(E.submitGuess(s, g, real, T0));
-  s = ok(E.submitGuess(s, g, others[1], T0)); // chute extra depois do acerto
+
+  s = ok(E.submitGuess(s, g, others[0], T0)); // errou
+  assert.equal(E.hasHit(s, g), false, 'o jogador sabe que errou');
+  assert.equal(E.guessesLeft(s, g), 2, 'ainda pode tentar');
+  assert.deepEqual(s.hits, {}, 'errar não revela nada a ninguém');
+
+  s = ok(E.submitGuess(s, g, real, T0)); // acertou
+  assert.equal(E.hasHit(s, g), true);
+  assert.deepEqual(s.hits[author], [g], 'o acerto é público (acende o avatar)');
+  assert.equal(E.guessesLeft(s, g), 0);
+  assert.match(E.submitGuess(s, g, others[1], T0).error, /já acertou/);
   const res = E.computeRoundResult({ ...s, order: [author] });
-  assert.deepEqual(res.texts[0].hits, [g]);
-  assert.equal(res.deltas[g].gained, 1);
-  assert.equal(res.deltas[author].gained, 1);
+  assert.deepEqual(res.texts[0].points, { [g]: 3 });
 });
 
 test('denúncia com quórum: perde reportPenalty, piso em 0; sem quórum não perde', () => {
@@ -202,23 +223,23 @@ test('denúncia com quórum: perde reportPenalty, piso em 0; sem quórum não pe
   assert.equal(s.lastResult.texts.find((t) => t.authorId === 'a').denounced, false);
 });
 
-test('denunciado ainda pontua os acertos da rodada (ganha 2, perde 2)', () => {
+test('denunciado ainda pontua os acertos da rodada', () => {
   const s = playRound(
     ['a', 'b', 'c'], { reportQuorum: 2, reportPenalty: 2 },
     (st, id, author) => (author === 'a' ? right(st, id, author) : wrong(st, id, author)),
     [['b', 'a'], ['c', 'a']],
   );
-  assert.equal(s.scores.a, 0); // +2 -2
-  assert.equal(s.scores.b, 1);
-  assert.equal(s.scores.c, 1);
+  assert.equal(s.scores.a, 0); // ganhou 2 (dois acertos recebidos) e perdeu 2 da denúncia
+  assert.equal(s.scores.b, 3); // acertou primeiro
+  assert.equal(s.scores.c, 2); // acertou depois
 });
 
 test('quórum efetivo nunca passa de (jogadores - 1)', () => {
   const s = playRound(['a', 'b'], { reportQuorum: 5 }, right, [['b', 'a']]);
   assert.equal(s.lastResult.quorum, 1);
   assert.equal(s.lastResult.texts.find((t) => t.authorId === 'a').denounced, true);
-  assert.equal(s.scores.a, 0); // +1 (b acertou) -2 => piso 0
-  assert.equal(s.scores.b, 2); // +1 acertou a, +1 a acertou b
+  assert.equal(s.scores.a, 2); // 1 (b acertou o texto dele) + 3 (acertou o de b) - 2 da denúncia
+  assert.equal(s.scores.b, 4); // 3 (acertou o texto de a) + 1 (a acertou o dele)
 });
 
 test('placar e resultado só mudam na pontuação (palpites ficam ocultos antes)', () => {

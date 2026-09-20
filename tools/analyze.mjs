@@ -66,6 +66,9 @@ out('\nMaiores arquivos próprios:');
 for (const f of own.sort((a, b) => loc(b) - loc(a)).slice(0, 6)) out(`- \`${f.path}\` — ${loc(f)} linhas`);
 
 // ---------------------------------------------------------------- grafo de dependências
+const dataFiles = all.filter((f) => f.path.startsWith('data/') && f.ext === '.json');
+out(`\nConteúdo em JSON, editável sem tocar em código: ${dataFiles.map((f) => `\`${f.path}\` (${kb(f.size)})`).join(' · ')}`);
+
 out('\n## 2. Dependências entre módulos');
 const graph = new Map();
 const importRe = /(?:import|export)\s[^'"]*?from\s+['"](\.[^'"]+)['"]|import\(\s*['"](\.[^'"]+)['"]\s*\)|^import\s+['"](\.[^'"]+)['"]/gm;
@@ -152,7 +155,7 @@ out(`- Config da sala normalizada no host antes de repassar: ${/normalized/.test
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 out(`- Content-Security-Policy na página (bloqueia scripts de fora): ${/Content-Security-Policy/.test(html) ? '✓' : '⚠ não'}`);
 out(`- Modo online com mensagens cifradas (AES-GCM) e testamento/eleição de host: ${existsSync(join(root, 'src/net/cipher.js')) && /AES-GCM/.test(readFileSync(join(root, 'src/net/cipher.js'), 'utf8')) ? '✓' : '⚠ não'}`);
-out(`- Testes em navegador real (Edge/Chrome): ${existsSync(join(root, 'test/e2e/e2e.test.js')) ? '✓ (npm run test:e2e)' : '⚠ não'}`);
+out(`- Testes em navegador real (Edge/Chrome): ${existsSync(join(root, 'test/e2e/e2e.test.js')) ? '✓ Edge/Chrome + Firefox (npm run test:e2e)' : '⚠ não'}`);
 out('- Sem autenticação forte: o host é quem cria a sala e tudo é confiança na LAN; o host vê todos os segredos da partida (inerente ao modelo "peer-host")');
 
 // ---------------------------------------------------------------- tamanhos e desempenho
@@ -161,7 +164,8 @@ const served = all.filter((f) => /^(index\.html|sw\.js|manifest|icon|apple|src\/
 const sum = (arr) => arr.reduce((n, f) => n + f.size, 0);
 const bucket = (re) => served.filter((f) => re.test(f.path));
 out(`- Scripts do navegador (src/**/*.js + vendor): ${kb(sum(bucket(/\.m?js$/)))}  (sem minificar/comprimir)`);
-out(`- CSS: ${kb(sum(bucket(/\.css$/)))} · Fontes: ${kb(sum(bucket(/^fonts\//)))} · Ícones/PNG: ${kb(sum(bucket(/\.png$/)))}`);
+const dys = sum(served.filter((f) => /opendyslexic/.test(f.path)));
+out(`- CSS: ${kb(sum(bucket(/\.css$/)))} · Fontes: ${kb(sum(bucket(/^fonts\//)))} (a de dislexia, ${kb(dys)}, só baixa se escolhida) · Ícones/PNG: ${kb(sum(bucket(/\.png$/)))}`);
 out(`- **Total servido: ${kb(sum(served))}** (~${kb(sum(served) * 0.3)} com gzip, estimado)`);
 
 const engine = await import(pathToFileURL(join(root, 'src/engine/engine.js')).href);

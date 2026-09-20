@@ -1,0 +1,63 @@
+{
+  "_comentario": "Conquistas de fim de partida. `destaque` ordena quais aparecem primeiro quando o jogador cumpre mais de três (maior = mais notável). `descricao` é o texto que aparece ao passar o mouse ou tocar no badge.",
+  "maximoPorJogador": 3,
+  "titulos": [
+    {
+      "id": "blefe",
+      "emoji": "🃏",
+      "nome": "Mestre do Blefe",
+      "descricao": "Escreveu um texto que enganou todo mundo: nenhum jogador acertou a vanguarda dele.",
+      "destaque": 90
+    },
+    {
+      "id": "sniper",
+      "emoji": "🎯",
+      "nome": "Sniper",
+      "descricao": "Errou no máximo um palpite na partida inteira — e acertou pelo menos um.",
+      "destaque": 85
+    },
+    {
+      "id": "sobreviveu",
+      "emoji": "🔥",
+      "nome": "Denunciado e Sobreviveu",
+      "descricao": "Levou uma denúncia válida por fugir do tema e, mesmo assim, ninguém descobriu a vanguarda dele.",
+      "destaque": 80
+    },
+    {
+      "id": "sogra",
+      "emoji": "🚬",
+      "nome": "Inimigo da Sogra",
+      "descricao": "Reconheceu um texto escrito em Poesia Marginal — coisa de quem lê o que não é oficial.",
+      "destaque": 65
+    },
+    {
+      "id": "romantico",
+      "emoji": "🥀",
+      "nome": "Último Romântico",
+      "descricao": "Três vezes o Romantismo apareceu no lugar errado: ou chutou Romantismo e errou, ou escreveu em Romantismo e foi confundido.",
+      "destaque": 55,
+      "vezes": 3
+    },
+    {
+      "id": "fa",
+      "emoji": "🎭",
+      "nome": "Fã do {vanguarda}",
+      "descricao": "Chutou {vanguarda} {vezes} vezes nesta partida. Já virou obsessão.",
+      "destaque": 50
+    },
+    {
+      "id": "fora",
+      "emoji": "🌀",
+      "nome": "Fora da Realidade",
+      "descricao": "Escreveu o texto mais denunciado da partida — ninguém entendeu o que aquilo tinha a ver com o tema.",
+      "destaque": 40
+    },
+    {
+      "id": "zero",
+      "emoji": "🐌",
+      "nome": "Zero Chute",
+      "descricao": "Passou uma rodada inteira sem usar nenhum palpite.",
+      "destaque": 20
+    }
+  ]
+}

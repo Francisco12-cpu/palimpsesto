@@ -12,7 +12,7 @@ const FAST = {
 };
 const CONFIG = {
   roundsPerPlayer: 2, minChars: 0, guessesPerPlayer: 1,
-  timers: { writing: 30, revealing: 30, guessing: 30, reporting: 30, scoring: 1 },
+  timers: { writing: 30, preview: 30, guessing: 30, reveal: 30, reporting: 30, scoring: 1 },
 };
 
 const sessions = [];
@@ -25,8 +25,16 @@ function player(broker, id, auto = true) {
     onError: (m, fatal) => log.errors.push([m, fatal]),
     onView: (v) => {
       log.views.push(v);
+      // sigilo: a vanguarda de um texto só pode aparecer depois do reveal DELE
       if (!['scoring', 'finished', 'lobby'].includes(v.phase)) {
-        for (const [aid, a] of Object.entries(v.assignments)) if (aid !== id && a.vanguard) log.leaks++;
+        const resolvidos = new Set(v.order.slice(0, v.cursor));
+        if (v.phase === 'reveal' || v.phase === 'reporting') resolvidos.add(v.order[v.cursor]);
+        for (const [aid, a] of Object.entries(v.assignments)) {
+          if (aid !== id && a.vanguard && !resolvidos.has(aid)) log.leaks++;
+        }
+        for (const [aid, byP] of Object.entries(v.guesses ?? {})) {
+          for (const pid of Object.keys(byP)) if (pid !== id && !resolvidos.has(aid)) log.leaks++;
+        }
         for (const d of Object.keys(v.drafts)) if (d !== id) log.leaks++;
       }
       if (!auto || v.phase === 'lobby') return;
@@ -34,7 +42,7 @@ function player(broker, id, auto = true) {
       if (acted.has(key) || v.done?.includes(id)) return;
       acted.add(key);
       if (v.phase === 'writing') { s.act({ a: 'draft', text: `texto de ${id}` }); s.act({ a: 'done' }); }
-      else if (v.phase === 'revealing') s.act({ a: 'done' });
+      else if (v.phase === 'preview' || v.phase === 'reveal') s.act({ a: 'done' });
       else if (v.phase === 'guessing') {
         if (v.order[v.cursor] === id) s.act({ a: 'done' });
         else s.act({ a: 'guess', vanguard: v.config.vanguards[(v.cursor + 2) % v.config.vanguards.length] });

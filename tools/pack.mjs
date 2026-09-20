@@ -14,9 +14,9 @@ const withNode = !process.argv.includes('--no-node');
 
 const FILES = [
   'index.html', 'serve.mjs', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
-  'apple-touch-icon.png', 'iniciar.bat', 'liberar-firewall.bat', 'package.json',
+  'apple-touch-icon.png', 'og.png', '404.html', 'LICENSE', 'iniciar.bat', 'liberar-firewall.bat', 'package.json',
 ];
-const DIRS = ['src', 'fonts'];
+const DIRS = ['src', 'fonts', 'data'];
 
 rmSync(join(root, 'dist'), { recursive: true, force: true });
 mkdirSync(out, { recursive: true });

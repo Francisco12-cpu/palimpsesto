@@ -33,7 +33,7 @@ export class GameHost {
     this.lobby.watchers ??= []; // espectadores: quem chega com a partida em andamento
     this.game = snapshot?.game ?? null;
     // o snapshot não leva `content` (13 KB iguais em todo cliente): recoloca do conteúdo local
-    if (this.game) this.game.content = { themes: structuredClone(content.themes), modifiers: [...content.modifiers] };
+    if (this.game) this.game.content = { themes: structuredClone(content.themes), modifiers: [...content.modifiers], titles: structuredClone(content.titles ?? []) };
     this.setHost(hostId);
   }
 

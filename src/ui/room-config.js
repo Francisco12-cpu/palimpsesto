@@ -1,7 +1,7 @@
 // Tela de configuração de sala (spec seção 7). Reutilizada pelo solo agora e pela
 // criação de sala em rede na Fase 3. Produz um objeto `config` que o motor normaliza.
-import { VANGUARD_INFO, VANGUARD_PRESETS } from '../data/content.js';
-import { DEFAULT_CONFIG, TEXT_TYPES } from '../engine/config.js';
+import { VANGUARD_INFO, VANGUARD_PRESETS, TEXT_TYPES } from '../data/content.js';
+import { DEFAULT_CONFIG } from '../engine/config.js';
 
 const STORAGE_KEY = 'vanguardas.config.v1';
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -53,7 +53,7 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
         </label>
       </div>
       <p class="dim grp">Tipos permitidos no sorteio</p>
-      <div class="grid">${TEXT_TYPES.map((t) => `<label class="inline"><input type="checkbox" name="ttype" value="${t}" ${initial.textTypes.includes(t) ? 'checked' : ''}> ${t}</label>`).join('')}</div>
+      <div class="grid">${TEXT_TYPES.map((t) => `<label class="inline"><input type="checkbox" name="ttype" value="${t}" ${(initial.textTypes ?? TEXT_TYPES).includes(t) ? 'checked' : ''}> ${t}</label>`).join('')}</div>
       ${chk('mods', 'Modificadores (a intenção que o texto precisa carregar)', initial.modifiersEnabled)}
       ${chk('filter', 'Filtro de palavrões (troca por asteriscos)', initial.filterProfanity)}
     </fieldset>
@@ -79,10 +79,11 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
       <summary>Tempos (segundos)</summary>
       <div class="grid">
         ${num('t_writing', 'Escrita', timers.writing, 5, 3600)}
-        ${num('t_revealing', 'Revelação de cada texto', timers.revealing, 1, 300)}
+        ${num('t_preview', 'Leitura de cada texto', timers.preview, 1, 300)}
+        ${num('t_reveal', 'Resposta de cada texto', timers.reveal, 1, 300)}
         ${num('t_guessing', 'Palpite de cada texto', timers.guessing, 3, 300)}
-        ${num('t_reporting', 'Denúncia', timers.reporting, 3, 300)}
-        ${num('t_scoring', 'Pontuação da rodada', timers.scoring, 3, 300)}
+        ${num('t_reporting', 'Denúncia de cada texto', timers.reporting, 3, 300)}
+        ${num('t_scoring', 'Placar da rodada', timers.scoring, 3, 300)}
       </div>
       <button type="button" id="fast">Modo rápido (para testes)</button>
     </details>`;
@@ -103,7 +104,7 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
   });
   container.addEventListener('change', (e) => { if (e.target.name === 'van') updateCount(); });
   container.querySelector('#fast').onclick = () => {
-    for (const [k, v] of Object.entries({ writing: 15, revealing: 4, guessing: 8, reporting: 10, scoring: 5 })) field(`t_${k}`).value = v;
+    for (const [k, v] of Object.entries({ writing: 15, preview: 3, guessing: 8, reveal: 3, reporting: 5, scoring: 6 })) field(`t_${k}`).value = v;
   };
   updateCount();
 
@@ -124,8 +125,8 @@ export function mountRoomConfig(container, initial = loadSavedConfig()) {
       filterProfanity: field('filter').checked,
       helper: { autocomplete: field('auto').checked, showAllNames: field('all').checked },
       timers: {
-        writing: n('t_writing'), revealing: n('t_revealing'), guessing: n('t_guessing'),
-        reporting: n('t_reporting'), scoring: n('t_scoring'),
+        writing: n('t_writing'), preview: n('t_preview'), guessing: n('t_guessing'),
+        reveal: n('t_reveal'), reporting: n('t_reporting'), scoring: n('t_scoring'),
       },
     };
   }

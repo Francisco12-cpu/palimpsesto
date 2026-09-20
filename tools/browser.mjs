@@ -36,3 +36,20 @@ export async function newPage(browser, viewport = PHONE) {
   await page.setViewport(viewport);
   return page;
 }
+
+const FIREFOX = [
+  process.env.FIREFOX_PATH,
+  'C:/Program Files/Mozilla Firefox/firefox.exe',
+  'C:/Program Files (x86)/Mozilla Firefox/firefox.exe',
+  '/usr/bin/firefox',
+  '/Applications/Firefox.app/Contents/MacOS/firefox',
+].filter(Boolean);
+
+/** Firefox (motor Gecko) para conferir o jogo num navegador diferente do Chrome/Edge. */
+export async function launchFirefox() {
+  const exe = FIREFOX.find((p) => existsSync(p));
+  if (!exe) return null;
+  let puppeteer;
+  try { puppeteer = (await import('puppeteer-core')).default; } catch { return null; }
+  return puppeteer.launch({ browser: 'firefox', executablePath: exe, headless: true, protocol: 'webDriverBiDi' });
+}

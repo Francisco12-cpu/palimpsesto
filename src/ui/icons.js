@@ -1,6 +1,6 @@
 // Ícones SVG inline (traço herdando currentColor) + o logotipo. Sem arquivos externos: funciona offline.
 import { BRAND, runes } from '../brand.js';
-import { EMOJI } from '../data/vanguards.js';
+import { EMOJI } from '../data/content.js';
 
 const P = {
   pen: '<path d="M20 4c-7 0-12 4-14 10l-1.5 5.5L10 18c6-2 10-7 10-14z"/><path d="M8.5 15.5 15 9"/>',

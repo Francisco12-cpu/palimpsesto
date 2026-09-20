@@ -6,6 +6,11 @@
 @font-face { font-family: 'Cinzel'; font-weight: 900; font-display: swap; src: url('../../fonts/cinzel-latin-900-normal.woff2') format('woff2'); }
 @font-face { font-family: 'IM Fell English'; font-style: normal; font-weight: 400; font-display: swap; src: url('../../fonts/im-fell-english-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'IM Fell English'; font-style: italic; font-weight: 400; font-display: swap; src: url('../../fonts/im-fell-english-latin-400-italic.woff2') format('woff2'); }
+/* Leitura alternativa: escolhidas nas configurações (atalho para quem tem dificuldade de leitura) */
+@font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 400; font-display: swap; src: url('../../fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 700; font-display: swap; src: url('../../fonts/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'OpenDyslexic'; font-weight: 400; font-display: swap; src: url('../../fonts/opendyslexic-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'OpenDyslexic'; font-weight: 700; font-display: swap; src: url('../../fonts/opendyslexic-latin-700-normal.woff2') format('woff2'); }
 /* Runas (celulares em geral não têm fonte rúnica) */
 @font-face { font-family: 'Noto Sans Runic'; font-weight: 400; font-display: swap; src: url('../../fonts/noto-sans-runic-runic-400-normal.woff2') format('woff2'); unicode-range: U+16A0-16FF; }
 
@@ -29,6 +34,9 @@
   --f-text: 'IM Fell English', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --f-rune: 'Noto Sans Runic', 'Segoe UI Symbol', serif;
   --radius: 10px;
+  /* trocadas por data-font no <html>: as fontes do jogo são o padrão */
+  --f-body: var(--f-text);
+  --f-head: var(--f-title);
   --shadow: 0 12px 34px rgba(0, 0, 0, .55);
 }
 
@@ -43,7 +51,7 @@ body {
     repeating-linear-gradient(45deg, rgba(0, 0, 0, .03) 0 2px, transparent 2px 6px);
   background-attachment: fixed;
   color: var(--text);
-  font: calc(17px * var(--scale, 1))/1.6 var(--f-text);
+  font: calc(17px * var(--scale, 1))/1.6 var(--f-body);
   overflow-x: hidden;
 }
 
@@ -79,7 +87,7 @@ body {
 .brand-mini { font: 700 .8rem var(--f-title); letter-spacing: 5px; color: var(--gold-text); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
 .brand-mini .logo { width: 30px; height: 30px; }
 
-h1, h2, h3 { font-family: var(--f-title); color: var(--gold); font-weight: 700; letter-spacing: 1.5px; line-height: 1.25; }
+h1, h2, h3 { font-family: var(--f-head); color: var(--gold); font-weight: 700; letter-spacing: 1.5px; line-height: 1.25; }
 h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); text-shadow: 0 0 30px rgba(212, 175, 55, .5); font-weight: 900; }
 h2 { font-size: 1.25rem; text-transform: uppercase; margin: 22px 0 10px; }
 h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }

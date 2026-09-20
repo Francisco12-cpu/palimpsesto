@@ -1,0 +1,178 @@
+{
+  "exemploTema": "uma xícara de café esfriando na mesa",
+  "exemploModificador": "Fale sobre a dor de uma perda",
+  "grupos": ["Pré-modernos", "Vanguardas europeias", "Brasileiras"],
+  "vanguardas": [
+    {
+      "nome": "Classicismo",
+      "emoji": "🏛️",
+      "grupo": "Pré-modernos",
+      "resumo": "Razão acima do impulso: a dor aparece contida, em frases equilibradas e tom nobre.",
+      "sobre": "A lógica do Classicismo é a confiança na razão e na medida: o mundo tem uma ordem, e a arte existe para mostrá-la com clareza. Escrever assim é recusar o exagero — a emoção aparece filtrada pelo juízo, como quem governa o próprio sofrimento em vez de exibi-lo. Busca-se o equilíbrio das frases, o vocabulário nobre e a referência à Antiguidade, porque o que é universal vale mais do que o que é pessoal. A beleza está na proporção, e a serenidade diante do inevitável é a maior prova de virtude.",
+      "comoEscrever": "Frases equilibradas e bem construídas, tom digno e controlado. Cite um mito ou uma lei universal, trate a dor como algo que a razão domina e nunca chore em cena.",
+      "exemplo": "Não me arrancam lamentos, ainda que a taça fria me recorde a mão que já não volta.\nAssim cortam as Parcas, e nem o pranto de Orfeu demoveu jamais a lei que a todos iguala.\nQue o ânimo se governe: chorar o irreparável é ofender a razão que os deuses nos deram.\nBebo o que resta, sereno, e devolvo a porcelana ao seu lugar."
+    },
+    {
+      "nome": "Barroco",
+      "emoji": "👑",
+      "grupo": "Pré-modernos",
+      "resumo": "Tudo em conflito: cada frase junta dois opostos, com rodeios e a certeza de que tudo passa.",
+      "sobre": "O Barroco nasce de uma tensão que nunca se resolve: fé e prazer, céu e terra, vida e morte puxam o texto para lados opostos ao mesmo tempo. Quem escreve assim não escolhe um lado — encena o conflito, e quanto mais ornamentado o caminho até a ideia, melhor. A frase simples ganha rodeios, antíteses e paradoxos, porque a verdade parece só se revelar no atrito entre contrários. Por baixo de tudo corre a consciência de que tudo é efêmero e se corrompe, e é essa angústia que dá o tom.",
+      "comoEscrever": "Construa cada frase sobre um par de opostos (arde e gela, tudo e nada). Abuse de metáforas rebuscadas e inversões, e feche lembrando que tudo passa.",
+      "exemplo": "Ardia o cálice, e hoje é gelo o que era brasa;\ntal é o amor: fogo que a própria cinza traga.\nBebo o que de ti restou nesta porcelana fria —\nmorre o quente, e é no frio que a saudade ainda arde."
+    },
+    {
+      "nome": "Arcadismo",
+      "emoji": "🌾",
+      "grupo": "Pré-modernos",
+      "resumo": "Vida simples no campo, tom sereno mesmo na tristeza, e o lembrete de aproveitar o dia.",
+      "sobre": "O Arcadismo quer o oposto do ruído: a vida simples do campo, o pastor, a sombra da árvore, o essencial. A lógica é a de que a felicidade está na moderação e na natureza, enquanto a cidade e o luxo corrompem. O tom permanece sereno mesmo na tristeza, e quem escreve costuma se disfarçar de pastor para falar de uma amada de nome clássico. Há sempre o lembrete discreto de que o tempo corre e convém aproveitar o dia — sem exageros, que o exagero também é vício.",
+      "comoEscrever": "Tom calmo e claro, cenário rural, amada com nome pastoril. Prefira o pequeno ao grandioso e termine com um convite brando a aproveitar o que resta.",
+      "exemplo": "Nesta mesa singela, onde outrora, Marília, o café nos aquecia,\nresta agora a porcelana, e o campo sem teu riso amanheceu mais pobre.\nQue vale ao pastor a tarde mansa, se a companheira não desce mais a encosta?\nBebamos o que sobrou: é breve a vida, e mais breve ainda o gosto das coisas boas."
+    },
+    {
+      "nome": "Romantismo",
+      "emoji": "🌹",
+      "grupo": "Pré-modernos",
+      "resumo": "O sentimento manda em tudo: eu em primeiro plano, exagero sem medo e natureza sofrendo junto.",
+      "sobre": "No Romantismo o sentimento manda em tudo: o eu de quem escreve ocupa o centro, e o mundo ao redor é só o espelho do que ele sente. Não existe medida — se dói, dói infinitamente; se ama, ama até a morte. A natureza acompanha o humor, a noite e a solidão viram personagens, e a morte é ao mesmo tempo ameaça e alívio. Escrever assim é escolher a intensidade em vez da precisão: importa mais comover do que descrever com exatidão.",
+      "comoEscrever": "Fale em primeira pessoa e exagere sem medo. Use exclamações e apelos (\"Ah!\", \"Ó\"), faça a paisagem sofrer junto e não economize no sofrimento.",
+      "exemplo": "Ah! não toques nessa xícara — é tudo o que me resta dela!\nMeu coração, como este café, esfriou-se para sempre,\ne chora a minha alma na treva de uma casa sem seu passo.\nÓ dor! ó ausência! quem me dera esfriar também."
+    },
+    {
+      "nome": "Realismo",
+      "emoji": "🔍",
+      "grupo": "Pré-modernos",
+      "resumo": "Olhar objetivo e irônico sobre a sociedade: o detalhe concreto faz a crítica sozinho.",
+      "sobre": "O Realismo troca a emoção pelo olho: observa a sociedade e a mostra como ela é, inclusive no que tem de mesquinho. A lógica é a de que as pessoas agem por interesse e por convenção, e quem narra expõe isso com precisão e ironia — sem gritar, sem julgar em voz alta, deixando o próprio fato fazer a crítica. Detalhes concretos e falas reveladoras valem mais que adjetivos, e a hipocrisia aparece sempre na distância entre o que se diz e o que se faz.",
+      "comoEscrever": "Descreva com exatidão o que se vê e o que se fala, inclua o detalhe social revelador e deixe a ironia no contraste entre discurso e comportamento.",
+      "exemplo": "A xícara ficou onde ela a deixou, e ninguém teve coragem de lavá-la.\nNa sala, falava-se do inventário naquela voz baixa que serve igualmente para velórios e para negócios.\nReparei que o café havia criado uma película fina na superfície, e que era só isso:\numa película, uma casa, uma herança, e nenhuma lágrima no lugar combinado."
+    },
+    {
+      "nome": "Naturalismo",
+      "emoji": "🌿",
+      "grupo": "Pré-modernos",
+      "resumo": "A pessoa como caso clínico: corpo, cheiro e instinto explicados pelo sangue e pelo ambiente.",
+      "sobre": "O Naturalismo leva o Realismo ao extremo e trata a pessoa como caso clínico: o comportamento é resultado do sangue, do meio e do momento. Quem escreve observa como um cientista observa a cobaia, sem pudor diante do corpo, do cheiro, da doença e do instinto. A linguagem fica crua e detalhada justamente nas partes que o bom gosto evitaria, porque a tese é que existe um animal logo abaixo do verniz civilizado — e é ele quem decide.",
+      "comoEscrever": "Use vocabulário quase médico, descreva corpo, cheiro e sujeira sem suavizar, e explique o comportamento pela hereditariedade ou pelo ambiente.",
+      "exemplo": "O líquido já baixara à temperatura do cômodo, e a borra assentara no fundo, escura, como sangue parado.\nA mão do viúvo tremia — não de dor, mas da cachaça da véspera, do fígado gasto, do sangue ruim que a mãe lhe legara.\nNa cozinha quente, as moscas reconheciam a xícara antes dele."
+    },
+    {
+      "nome": "Parnasianismo",
+      "emoji": "💎",
+      "grupo": "Pré-modernos",
+      "resumo": "Arte pela arte: o objeto descrito como joia lapidada, com o autor fora de cena.",
+      "sobre": "O lema é \"a arte pela arte\": o poema vale pela perfeição da forma, não pela emoção de quem o escreveu. O poeta se apaga e vira ourives — trabalha o verso como quem lapida pedra, escolhe a palavra rara, cuida do ritmo e da rima. Costuma descrever objetos e cenas de fora, com frieza elegante, porque o que interessa é a beleza construída e não a confissão. O sentimento pode existir, mas jamais desarruma a superfície polida do texto.",
+      "comoEscrever": "Descreva um objeto com vocabulário culto e preciso, mantenha o \"eu\" fora do texto, cuide do ritmo e prefira a imagem esculpida ao desabafo.",
+      "exemplo": "Na alva porcelana que um friso de ouro aformoseia,\ndorme o licor escuro, imóvel como um ônix lapidado.\nNenhum lábio o procura; sozinha, a chávena senhoreia\no mármore da mesa — vaso frio de um bem já sepultado."
+    },
+    {
+      "nome": "Simbolismo",
+      "emoji": "🌙",
+      "grupo": "Pré-modernos",
+      "resumo": "Sugerir em vez de dizer: musicalidade, névoa, sentidos misturados e nada nomeado.",
+      "sobre": "O Simbolismo não diz — sugere. Parte da ideia de que o essencial é vago e só se alcança por música, símbolo e insinuação. As palavras são escolhidas pelo som e pela atmosfera que criam, as sensações se misturam (cores com cheiro, sons com cor) e conceitos abstratos ganham maiúscula, como se fossem presenças no cômodo. Névoa, brancura e reticências servem para deixar o sentido pairando: nomear seria estragar tudo.",
+      "comoEscrever": "Busque musicalidade e repetição, misture os sentidos, use reticências e maiúsculas alegóricas — e nunca nomeie diretamente aquilo de que o texto trata.",
+      "exemplo": "Vapores... últimos vapores de um aroma que se desfaz em surdina,\ne a Ausência, branca, branca, pousa a mão sobre a louça adormecida.\nAlgo de violeta e de violino esfria no fundo da porcelana.\nNão digo o nome. O nome é um sino que ninguém toca mais."
+    },
+    {
+      "nome": "Futurismo",
+      "emoji": "🚀",
+      "grupo": "Vanguardas europeias",
+      "resumo": "Velocidade, máquina e ruído; o passado e o luto são peso morto a descartar.",
+      "sobre": "O Futurismo é a exaltação da velocidade, da máquina e da cidade — e o desprezo por tudo que seja passado, lento ou sentimental. Escrever assim é abolir o que atrapalha a corrida: pontuação, sintaxe arrumada, adjetivo delicado. Restam palavras em choque, ruídos, números e maiúsculas, numa energia agressiva que trata a memória e o luto como peso morto. Não há tempo para tristeza; há motor, grito e futuro.",
+      "comoEscrever": "Frases curtas sem pontuação tradicional, verbos de impacto, onomatopeias e maiúsculas. Ataque o passado e celebre movimento, motor e futuro.",
+      "exemplo": "CAFÉ FRIO = motor parado = derrota!!\ntic tic tic o relógio dispara cem por hora e a mesa não anda não anda\nabaixo a xícara-múmia abaixo o luto-poeira\neu quero a manhã elétrica ZRRRÁÁÁ o bonde o grito o sangue novo e nenhuma saudade"
+    },
+    {
+      "nome": "Cubismo literário",
+      "emoji": "🧩",
+      "grupo": "Vanguardas europeias",
+      "resumo": "Vários ângulos e tempos ao mesmo tempo, em fragmentos justapostos como uma colagem.",
+      "sobre": "O Cubismo literário faz com o texto o que o quadro cubista faz com a figura: mostra vários ângulos ao mesmo tempo, em vez de uma vista só. O tempo se embaralha, os planos se sobrepõem e a cena chega em pedaços que o leitor precisa montar. Não há narrador estável nem ordem dos fatos — há recortes colocados lado a lado, sem conectivo que explique a passagem de um para outro.",
+      "comoEscrever": "Descreva o mesmo objeto de ângulos e tempos diferentes, em frases curtas justapostas, sem conectivos explicativos. Deixe os fragmentos brigando entre si.",
+      "exemplo": "A xícara vista de cima: um círculo. De lado: um vazio com alça. De ontem: cheia.\nMesa manhã mesa noite a mesma mesa — e a mão dela entrando pelo canto de um dia que já não existe.\nTrês horas ao mesmo tempo. Só o açúcar no fundo sabe a ordem dos fatos."
+    },
+    {
+      "nome": "Dadaísmo",
+      "emoji": "🎲",
+      "grupo": "Vanguardas europeias",
+      "resumo": "Antiarte: absurdo, acaso e deboche contra a lógica e a própria ideia de obra.",
+      "sobre": "O Dadaísmo é antiarte: nasce do desgosto com a lógica e a seriedade, e responde com absurdo, acaso e deboche. Escrever assim é sabotar o sentido — juntar palavras por sorteio, afirmar impossibilidades, negar o que se acabou de dizer. O texto não quer ser compreendido nem admirado; quer provocar e rir da própria ideia de obra de arte. Quanto mais o resultado parecer errado, mais dadaísta ele é.",
+      "comoEscrever": "Quebre a lógica de propósito, misture objetos sem relação, invente regras absurdas e contradiga-se. Quanto menos \"poético\", melhor.",
+      "exemplo": "A dor é uma xícara. A xícara é um chapéu. O chapéu está de luto por um bigode.\nRecortei a palavra CAFÉ em sete pedaços e sorteei: É-FAC. FAC-É. o café é uma mentira morna.\nProponho: enterrem a colher. Guardem o frio numa gaveta. A gaveta não existe.\ndadá bebe o vazio e arrota porcelana"
+    },
+    {
+      "nome": "Expressionismo",
+      "emoji": "🎭",
+      "grupo": "Vanguardas europeias",
+      "resumo": "O mundo deformado pela angústia: cenário torto, objetos agressivos, tom de grito.",
+      "sobre": "O Expressionismo deforma o mundo para que ele caiba na angústia de quem escreve. Não interessa como as coisas são, e sim como elas parecem para alguém em sofrimento: a luz é doentia, a cidade é hostil, os objetos ganham boca e dentes. O tom é gritado, as imagens são violentas e o texto parece torto de propósito, porque a distorção é justamente o que revela o estado interior.",
+      "comoEscrever": "Distorça o cenário até ele virar estado de espírito, dê ações agressivas aos objetos, use imagens duras e mantenha o tom de grito contido.",
+      "exemplo": "A xícara abre a boca e não grita — quem grita sou eu, por dentro, num grito sem saída.\nO café é um olho preto que me encara do fundo da mesa, e a casa inteira range os dentes.\nTudo está torto: a cadeira, a luz amarela, o meu rosto na janela cheia de fuligem.\nA morte não veio de fora. Estava sentada aqui, bebendo, esse tempo todo."
+    },
+    {
+      "nome": "Surrealismo",
+      "emoji": "👁️",
+      "grupo": "Vanguardas europeias",
+      "resumo": "Lógica de sonho: imagens impossíveis encadeadas com naturalidade, sem nenhuma explicação.",
+      "sobre": "O Surrealismo confia no sonho e no inconsciente mais do que na razão. A escrita corre solta, ligando imagens que a lógica jamais juntaria, e o resultado tem coerência de pesadelo: tudo acontece com naturalidade, por mais impossível que seja. Objetos se transformam no meio da frase, pessoas atravessam paredes de sentido, e o texto nunca explica nem pede licença — explicar seria acordar.",
+      "comoEscrever": "Encadeie imagens impossíveis com naturalidade, deixe objetos se transformarem no meio da frase e jamais justifique o absurdo.",
+      "exemplo": "O café esfriou e virou um pequeno mar onde afunda um piano de dentes.\nMinha mãe sai pela boca da xícara vestida de relógio e pergunta se o domingo já foi alimentado.\nDigo que sim. Ela rasga o açúcar, e da rachadura escorrem formigas levando a minha infância para o norte.\nNa mesa, a colher continua sonhando que é um peixe."
+    },
+    {
+      "nome": "Imagismo",
+      "emoji": "📷",
+      "grupo": "Vanguardas europeias",
+      "resumo": "Uma imagem nítida por linha, sem adjetivo decorativo nem comentário do autor.",
+      "sobre": "O Imagismo aposta que uma imagem nítida diz mais do que qualquer explicação. Corta-se tudo o que sobra: advérbio, adjetivo decorativo, comentário de quem escreve. Fica o instante visto com precisão, quase uma fotografia em palavras. O sentimento não é declarado — ele aparece no que foi mostrado, e cabe ao leitor senti-lo sozinho. Poucas palavras, escolhidas como quem pesa cada uma.",
+      "comoEscrever": "Poucas palavras e frases nominais, uma imagem concreta por linha. Corte todo adjetivo decorativo e não comente o que a cena significa.",
+      "exemplo": "Xícara na mesa.\nNa superfície parada, o teto da cozinha.\nUma mosca atravessa a luz.\nFrio."
+    },
+    {
+      "nome": "Modernismo",
+      "emoji": "🏙️",
+      "grupo": "Brasileiras",
+      "resumo": "Verso livre e linguagem falada sobre o cotidiano, com humor seco e crítica por baixo.",
+      "sobre": "O Modernismo brasileiro rompe com a solenidade: escreve como se fala, em verso livre, sobre o dia a dia e o país real. Aceita o humor, a gíria e a frase curta, e desconfia de tudo o que soe a discurso ou a pompa. O olhar parece despretensioso, mas costuma esconder uma observação afiada sobre nós mesmos — o texto simples é justamente o que deixa a crítica passar sem alarde.",
+      "comoEscrever": "Use linguagem falada e verso livre, misture cotidiano e reflexão, evite palavra pomposa e termine com uma observação seca em vez de moral.",
+      "exemplo": "A xícara dela ficou na mesa e eu não lavei.\nTomei café ruim o mês inteiro, de propósito, que nem castigo de criança.\nA gente que se acha moderno também não sabe o que fazer com a morte:\nfica ali mexendo a colher num negócio frio, esperando alguém dizer alguma coisa."
+    },
+    {
+      "nome": "Antropofagismo",
+      "emoji": "🥥",
+      "grupo": "Brasileiras",
+      "resumo": "Devorar o que vem de fora e transformar em nosso, em tom de manifesto irreverente.",
+      "sobre": "A ideia é devorar: engolir o que vem de fora, digerir e transformar em algo brasileiro e novo. O tom é irreverente e provocador, cheio de frases de efeito, trocadilhos e inversões que zombam da reverência à cultura estrangeira. Há um primitivismo assumido — o instinto e o apetite valem mais do que a boa educação — e qualquer assunto, inclusive a dor, pode virar comida.",
+      "comoEscrever": "Escreva em tom de manifesto, faça trocadilho com referências estrangeiras, use frases curtas de efeito e trate qualquer coisa — cultura, luto, dor — como alimento.",
+      "exemplo": "Tupi or not tupi — eu bebi. Bebi o café frio e bebi também a saudade, prato que só se serve assim.\nA dor estrangeira chegou de navio; mastiguei, cuspi o caroço, guardei o resto para o jantar.\nSó me interessa o que não é meu: a morte dos outros, o açúcar dos outros, a xícara que sobrou.\nAntes dela, não havia tristeza. Depois dela, houve almoço."
+    },
+    {
+      "nome": "Concretismo",
+      "emoji": "⬛",
+      "grupo": "Brasileiras",
+      "resumo": "A palavra vira objeto: poucas palavras, quebradas e dispostas no espaço — ler é também ver.",
+      "sobre": "No Concretismo a palavra deixa de ser apenas som e sentido e vira objeto: importa como ela ocupa o espaço, como se parte e como se repete. A sintaxe quase desaparece e sobram poucas palavras arrumadas de um jeito que o próprio desenho do texto significa. Ler é também ver: o vazio da página, a coluna, o degrau e a palavra partida carregam o sentido que a frase não diz.",
+      "comoEscrever": "Use pouquíssimas palavras, quebre-as em pedaços, repita e disponha em colunas ou degraus. Deixe a forma na página dizer o que a frase não diz.",
+      "exemplo": "café café café\n ca fé  ca fé\n   fé      fé\n    f r i a\n      f i m"
+    },
+    {
+      "nome": "Poesia Marginal",
+      "emoji": "✏️",
+      "grupo": "Brasileiras",
+      "resumo": "Bilhete rápido: coloquial, minúsculo, banal — e uma virada irônica na última linha.",
+      "sobre": "A Poesia Marginal é feita fora do circuito oficial e não quer parecer literatura: é curta, coloquial, escrita como bilhete ou anotação de quem está com pressa. O assunto é o dia a dia, o humor é seco e o efeito costuma vir de uma virada rápida na última linha. Solenidade, aqui, é defeito: quanto mais parecer um recado deixado na geladeira, melhor.",
+      "comoEscrever": "Frases curtas, letra minúscula e linguagem de conversa. Fale de algo banal e guarde uma virada irônica ou triste para o fim.",
+      "exemplo": "deixei a xícara dela na mesa\nfaz três semanas\njá virou bicho de estimação\na única coisa nesta casa que ainda tem alguma coisa dentro"
+    },
+    {
+      "nome": "Tropicalismo",
+      "emoji": "🌴",
+      "grupo": "Brasileiras",
+      "resumo": "Colagem alegre e crítica: popular com erudito, nacional com importado, festa sobre assunto grave.",
+      "sobre": "O Tropicalismo mistura sem pedir licença: o popular e o erudito, o brasileiro e o importado, o arcaico e o moderno entram no mesmo texto. A colagem é intencional e alegre, mas funciona como crítica — ao mostrar o país como caldeirão de contradições, expõe o que há nele de desigual e de cafona. O clima permanece festivo mesmo quando o assunto é grave, e é justamente esse contraste que incomoda.",
+      "comoEscrever": "Junte marcas, músicas e objetos de origens diferentes na mesma frase, misture o luxo e o cafona, e mantenha tom de festa mesmo falando de dor.",
+      "exemplo": "Café frio na xícara comprada na Santa Ifigênia, coca-cola morna na geladeira, a novela das nove chorando por mim.\nMinha dor tem ritmo de bolero e legenda em inglês: I miss you, mainha.\nEnterro com guarda-chuva colorido e banda de pífano tocando os Beatles fora do tom —\ne o Brasil inteiro me oferecendo um cafezinho que eu já não consigo tomar."
+    }
+  ]
+}

@@ -1,0 +1,1091 @@
+{
+  "tons": {
+    "leve": "Leves/banais",
+    "medio": "Médios",
+    "pesado": "Pesados/poéticos",
+    "antigo": "Época antiga",
+    "moderno": "Bem modernos"
+  },
+  "temas": [
+    {
+      "texto": "uma bicicleta descendo uma ladeira",
+      "tom": "leve",
+      "palavrasChave": [
+        "vento",
+        "freio",
+        "ladeira"
+      ]
+    },
+    {
+      "texto": "alguém procurando a chave perdida",
+      "tom": "leve",
+      "palavrasChave": [
+        "bolso",
+        "pressa",
+        "porta"
+      ]
+    },
+    {
+      "texto": "uma criança comendo uma maçã pela primeira vez",
+      "tom": "leve",
+      "palavrasChave": [
+        "doce",
+        "dente",
+        "susto"
+      ]
+    },
+    {
+      "texto": "uma xícara de café esfriando na mesa",
+      "tom": "leve",
+      "palavrasChave": [
+        "vapor",
+        "espera",
+        "mesa"
+      ]
+    },
+    {
+      "texto": "um gato dormindo no parapeito da janela",
+      "tom": "leve",
+      "palavrasChave": [
+        "sol",
+        "bigode",
+        "ronronar"
+      ]
+    },
+    {
+      "texto": "a fila do pão numa manhã de domingo",
+      "tom": "leve",
+      "palavrasChave": [
+        "cheiro",
+        "senha",
+        "sacola"
+      ]
+    },
+    {
+      "texto": "um guarda-chuva que virou do avesso",
+      "tom": "leve",
+      "palavrasChave": [
+        "rajada",
+        "poça",
+        "riso"
+      ]
+    },
+    {
+      "texto": "alguém tentando montar um móvel sem o manual",
+      "tom": "leve",
+      "palavrasChave": [
+        "parafuso",
+        "peça",
+        "paciência"
+      ]
+    },
+    {
+      "texto": "uma pipa presa num fio de poste",
+      "tom": "leve",
+      "palavrasChave": [
+        "linha",
+        "céu",
+        "menino"
+      ]
+    },
+    {
+      "texto": "o primeiro dia de férias",
+      "tom": "leve",
+      "palavrasChave": [
+        "mala",
+        "praia",
+        "relógio"
+      ]
+    },
+    {
+      "texto": "um sorvete derretendo antes de acabar",
+      "tom": "leve",
+      "palavrasChave": [
+        "colher",
+        "calor",
+        "pressa"
+      ]
+    },
+    {
+      "texto": "a última fatia de bolo na geladeira",
+      "tom": "leve",
+      "palavrasChave": [
+        "disputa",
+        "prato",
+        "madrugada"
+      ]
+    },
+    {
+      "texto": "uma planta que finalmente floresceu",
+      "tom": "leve",
+      "palavrasChave": [
+        "vaso",
+        "água",
+        "espera"
+      ]
+    },
+    {
+      "texto": "um cachorro esperando o dono na porta",
+      "tom": "leve",
+      "palavrasChave": [
+        "rabo",
+        "passos",
+        "saudade"
+      ]
+    },
+    {
+      "texto": "dois amigos se encontrando depois de anos",
+      "tom": "medio",
+      "palavrasChave": [
+        "abraço",
+        "tempo",
+        "rua"
+      ]
+    },
+    {
+      "texto": "uma carta nunca enviada",
+      "tom": "medio",
+      "palavrasChave": [
+        "gaveta",
+        "selo",
+        "medo"
+      ]
+    },
+    {
+      "texto": "o silêncio depois de uma briga",
+      "tom": "medio",
+      "palavrasChave": [
+        "relógio",
+        "porta",
+        "olhar"
+      ]
+    },
+    {
+      "texto": "alguém que perdeu o último trem",
+      "tom": "medio",
+      "palavrasChave": [
+        "plataforma",
+        "noite",
+        "apito"
+      ]
+    },
+    {
+      "texto": "a mudança para uma casa nova",
+      "tom": "medio",
+      "palavrasChave": [
+        "caixas",
+        "eco",
+        "janela"
+      ]
+    },
+    {
+      "texto": "uma entrevista de emprego que deu errado",
+      "tom": "medio",
+      "palavrasChave": [
+        "gravata",
+        "suor",
+        "cadeira"
+      ]
+    },
+    {
+      "texto": "o reencontro com a casa da infância",
+      "tom": "medio",
+      "palavrasChave": [
+        "quintal",
+        "cheiro",
+        "porta"
+      ]
+    },
+    {
+      "texto": "um segredo guardado por tempo demais",
+      "tom": "medio",
+      "palavrasChave": [
+        "peso",
+        "sussurro",
+        "chave"
+      ]
+    },
+    {
+      "texto": "a espera por um resultado de exame",
+      "tom": "medio",
+      "palavrasChave": [
+        "sala",
+        "corredor",
+        "telefone"
+      ]
+    },
+    {
+      "texto": "um convite recusado por covardia",
+      "tom": "medio",
+      "palavrasChave": [
+        "desculpa",
+        "festa",
+        "arrependimento"
+      ]
+    },
+    {
+      "texto": "o último dia de trabalho num lugar antigo",
+      "tom": "medio",
+      "palavrasChave": [
+        "crachá",
+        "mesa",
+        "despedida"
+      ]
+    },
+    {
+      "texto": "uma viagem sem destino definido",
+      "tom": "medio",
+      "palavrasChave": [
+        "estrada",
+        "mapa",
+        "janela"
+      ]
+    },
+    {
+      "texto": "dois desconhecidos dividindo um guarda-chuva",
+      "tom": "medio",
+      "palavrasChave": [
+        "chuva",
+        "ombros",
+        "esquina"
+      ]
+    },
+    {
+      "texto": "uma foto antiga encontrada por acaso",
+      "tom": "medio",
+      "palavrasChave": [
+        "poeira",
+        "sorriso",
+        "verso"
+      ]
+    },
+    {
+      "texto": "a última conversa com alguém que morreu",
+      "tom": "pesado",
+      "palavrasChave": [
+        "voz",
+        "despedida",
+        "cadeira"
+      ]
+    },
+    {
+      "texto": "um casamento arranjado que ninguém queria",
+      "tom": "pesado",
+      "palavrasChave": [
+        "aliança",
+        "festa",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "uma promessa que não foi cumprida",
+      "tom": "pesado",
+      "palavrasChave": [
+        "palavra",
+        "dívida",
+        "tarde"
+      ]
+    },
+    {
+      "texto": "a casa vazia depois de um enterro",
+      "tom": "pesado",
+      "palavrasChave": [
+        "sapatos",
+        "relógio",
+        "eco"
+      ]
+    },
+    {
+      "texto": "alguém que precisa deixar a terra onde nasceu",
+      "tom": "pesado",
+      "palavrasChave": [
+        "mala",
+        "raiz",
+        "fronteira"
+      ]
+    },
+    {
+      "texto": "um pedido de perdão que chega tarde demais",
+      "tom": "pesado",
+      "palavrasChave": [
+        "mão",
+        "túmulo",
+        "flor"
+      ]
+    },
+    {
+      "texto": "o abandono de um filho pelo pai",
+      "tom": "pesado",
+      "palavrasChave": [
+        "porta",
+        "espera",
+        "nome"
+      ]
+    },
+    {
+      "texto": "a solidão no meio de uma multidão",
+      "tom": "pesado",
+      "palavrasChave": [
+        "rostos",
+        "ruído",
+        "vazio"
+      ]
+    },
+    {
+      "texto": "uma guerra vista pela janela de uma criança",
+      "tom": "pesado",
+      "palavrasChave": [
+        "estrondo",
+        "pão",
+        "medo"
+      ]
+    },
+    {
+      "texto": "o envelhecimento diante do espelho",
+      "tom": "pesado",
+      "palavrasChave": [
+        "ruga",
+        "tempo",
+        "espelho"
+      ]
+    },
+    {
+      "texto": "um amor que acabou sem ninguém dizer",
+      "tom": "pesado",
+      "palavrasChave": [
+        "cama",
+        "costas",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "a culpa por ter sobrevivido",
+      "tom": "pesado",
+      "palavrasChave": [
+        "sombra",
+        "nome",
+        "noite"
+      ]
+    },
+    {
+      "texto": "uma carta de amor que demora meses pra chegar",
+      "tom": "antigo",
+      "palavrasChave": [
+        "navio",
+        "lacre",
+        "saudade"
+      ]
+    },
+    {
+      "texto": "um exército voltando derrotado",
+      "tom": "antigo",
+      "palavrasChave": [
+        "poeira",
+        "bandeira",
+        "estrada"
+      ]
+    },
+    {
+      "texto": "uma peste chegando a uma vila medieval",
+      "tom": "antigo",
+      "palavrasChave": [
+        "sino",
+        "febre",
+        "porta"
+      ]
+    },
+    {
+      "texto": "um mercador atravessando o deserto",
+      "tom": "antigo",
+      "palavrasChave": [
+        "areia",
+        "camelo",
+        "estrela"
+      ]
+    },
+    {
+      "texto": "a coroação de um rei muito jovem",
+      "tom": "antigo",
+      "palavrasChave": [
+        "coroa",
+        "coro",
+        "peso"
+      ]
+    },
+    {
+      "texto": "uma família à luz de vela esperando o inverno passar",
+      "tom": "antigo",
+      "palavrasChave": [
+        "lenha",
+        "sombra",
+        "neve"
+      ]
+    },
+    {
+      "texto": "um marinheiro avistando terra depois de meses no mar",
+      "tom": "antigo",
+      "palavrasChave": [
+        "mastro",
+        "gaivota",
+        "sal"
+      ]
+    },
+    {
+      "texto": "uma dama escrevendo em segredo à noite",
+      "tom": "antigo",
+      "palavrasChave": [
+        "pena",
+        "tinta",
+        "corredor"
+      ]
+    },
+    {
+      "texto": "um mensageiro a cavalo com uma notícia terrível",
+      "tom": "antigo",
+      "palavrasChave": [
+        "galope",
+        "selo",
+        "aldeia"
+      ]
+    },
+    {
+      "texto": "uma feira numa cidade antiga",
+      "tom": "antigo",
+      "palavrasChave": [
+        "barraca",
+        "moeda",
+        "grito"
+      ]
+    },
+    {
+      "texto": "alguém sem sinal de wifi numa emergência",
+      "tom": "moderno",
+      "palavrasChave": [
+        "barra",
+        "tela",
+        "pânico"
+      ]
+    },
+    {
+      "texto": "uma notificação que não para de tocar",
+      "tom": "moderno",
+      "palavrasChave": [
+        "vibração",
+        "bolso",
+        "nome"
+      ]
+    },
+    {
+      "texto": "uma videochamada em que ninguém liga a câmera",
+      "tom": "moderno",
+      "palavrasChave": [
+        "quadrado",
+        "mudo",
+        "eco"
+      ]
+    },
+    {
+      "texto": "um engarrafamento que não anda",
+      "tom": "moderno",
+      "palavrasChave": [
+        "buzina",
+        "rádio",
+        "relógio"
+      ]
+    },
+    {
+      "texto": "a bateria do celular chegando a 1%",
+      "tom": "moderno",
+      "palavrasChave": [
+        "carregador",
+        "tomada",
+        "aflição"
+      ]
+    },
+    {
+      "texto": "um entregador de aplicativo sob a chuva",
+      "tom": "moderno",
+      "palavrasChave": [
+        "mochila",
+        "endereço",
+        "pressa"
+      ]
+    },
+    {
+      "texto": "a senha esquecida de uma conta importante",
+      "tom": "moderno",
+      "palavrasChave": [
+        "tentativa",
+        "bloqueio",
+        "memória"
+      ]
+    },
+    {
+      "texto": "alguém rolando o feed até de madrugada",
+      "tom": "moderno",
+      "palavrasChave": [
+        "polegar",
+        "luz",
+        "vazio"
+      ]
+    },
+    {
+      "texto": "uma mensagem visualizada e nunca respondida",
+      "tom": "moderno",
+      "palavrasChave": [
+        "tique",
+        "espera",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "um elevador parado entre dois andares",
+      "tom": "moderno",
+      "palavrasChave": [
+        "botão",
+        "escuro",
+        "voz"
+      ]
+    },
+    {
+      "texto": "um pastel quente numa feira de rua",
+      "tom": "leve",
+      "palavrasChave": [
+        "óleo",
+        "guardanapo",
+        "fila"
+      ]
+    },
+    {
+      "texto": "alguém dançando sozinho na cozinha",
+      "tom": "leve",
+      "palavrasChave": [
+        "panela",
+        "rádio",
+        "chinelo"
+      ]
+    },
+    {
+      "texto": "uma bola perdida no quintal do vizinho",
+      "tom": "leve",
+      "palavrasChave": [
+        "muro",
+        "grito",
+        "campainha"
+      ]
+    },
+    {
+      "texto": "a primeira chuva depois de meses de seca",
+      "tom": "leve",
+      "palavrasChave": [
+        "terra",
+        "cheiro",
+        "telhado"
+      ]
+    },
+    {
+      "texto": "um café da manhã que ninguém quer acabar",
+      "tom": "leve",
+      "palavrasChave": [
+        "pão",
+        "manteiga",
+        "domingo"
+      ]
+    },
+    {
+      "texto": "um balão de festa fugindo pro céu",
+      "tom": "leve",
+      "palavrasChave": [
+        "fio",
+        "criança",
+        "azul"
+      ]
+    },
+    {
+      "texto": "dois vizinhos discutindo sobre o volume da música",
+      "tom": "leve",
+      "palavrasChave": [
+        "parede",
+        "sábado",
+        "vassoura"
+      ]
+    },
+    {
+      "texto": "alguém aprendendo a andar de patins",
+      "tom": "leve",
+      "palavrasChave": [
+        "joelho",
+        "equilíbrio",
+        "risada"
+      ]
+    },
+    {
+      "texto": "o último dia de aula antes das férias",
+      "tom": "leve",
+      "palavrasChave": [
+        "sino",
+        "mochila",
+        "corredor"
+      ]
+    },
+    {
+      "texto": "um sanduíche esquecido na mochila",
+      "tom": "leve",
+      "palavrasChave": [
+        "cheiro",
+        "segunda",
+        "papel"
+      ]
+    },
+    {
+      "texto": "uma cantoria desafinada no chuveiro",
+      "tom": "leve",
+      "palavrasChave": [
+        "espuma",
+        "eco",
+        "vizinho"
+      ]
+    },
+    {
+      "texto": "um pião girando sem parar",
+      "tom": "leve",
+      "palavrasChave": [
+        "barbante",
+        "chão",
+        "roda"
+      ]
+    },
+    {
+      "texto": "uma despedida na rodoviária",
+      "tom": "medio",
+      "palavrasChave": [
+        "mala",
+        "ônibus",
+        "aceno"
+      ]
+    },
+    {
+      "texto": "um professor lembrando de um ex-aluno",
+      "tom": "medio",
+      "palavrasChave": [
+        "giz",
+        "lousa",
+        "nome"
+      ]
+    },
+    {
+      "texto": "a primeira noite sozinho numa cidade nova",
+      "tom": "medio",
+      "palavrasChave": [
+        "luz",
+        "barulho",
+        "mala"
+      ]
+    },
+    {
+      "texto": "uma dívida antiga finalmente paga",
+      "tom": "medio",
+      "palavrasChave": [
+        "envelope",
+        "olhar",
+        "alívio"
+      ]
+    },
+    {
+      "texto": "um pai ensinando o filho a andar de bicicleta",
+      "tom": "medio",
+      "palavrasChave": [
+        "mão",
+        "queda",
+        "soltar"
+      ]
+    },
+    {
+      "texto": "uma mentira contada para poupar alguém",
+      "tom": "medio",
+      "palavrasChave": [
+        "sorriso",
+        "peso",
+        "olhos"
+      ]
+    },
+    {
+      "texto": "dois irmãos dividindo a herança",
+      "tom": "medio",
+      "palavrasChave": [
+        "mesa",
+        "casa",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "o barulho da casa quando todos foram embora",
+      "tom": "medio",
+      "palavrasChave": [
+        "geladeira",
+        "relógio",
+        "sombra"
+      ]
+    },
+    {
+      "texto": "uma reunião de família que termina em discussão",
+      "tom": "medio",
+      "palavrasChave": [
+        "panela",
+        "voz",
+        "porta"
+      ]
+    },
+    {
+      "texto": "a hesitação antes de apertar o botão de enviar",
+      "tom": "medio",
+      "palavrasChave": [
+        "dedo",
+        "tela",
+        "arrependimento"
+      ]
+    },
+    {
+      "texto": "um músico de rua tocando pra ninguém",
+      "tom": "medio",
+      "palavrasChave": [
+        "chapéu",
+        "moeda",
+        "esquina"
+      ]
+    },
+    {
+      "texto": "a última carta de um soldado",
+      "tom": "medio",
+      "palavrasChave": [
+        "trincheira",
+        "lápis",
+        "casa"
+      ]
+    },
+    {
+      "texto": "a primeira noite depois de uma perda",
+      "tom": "pesado",
+      "palavrasChave": [
+        "cama",
+        "escuro",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "um segredo de família revelado no velório",
+      "tom": "pesado",
+      "palavrasChave": [
+        "caixão",
+        "sussurro",
+        "olhar"
+      ]
+    },
+    {
+      "texto": "o hospital às três da manhã",
+      "tom": "pesado",
+      "palavrasChave": [
+        "corredor",
+        "luz",
+        "espera"
+      ]
+    },
+    {
+      "texto": "uma mãe esperando notícias de um filho que partiu",
+      "tom": "pesado",
+      "palavrasChave": [
+        "janela",
+        "telefone",
+        "panela"
+      ]
+    },
+    {
+      "texto": "a memória que se apaga aos poucos",
+      "tom": "pesado",
+      "palavrasChave": [
+        "nome",
+        "rosto",
+        "névoa"
+      ]
+    },
+    {
+      "texto": "um exílio sem data para acabar",
+      "tom": "pesado",
+      "palavrasChave": [
+        "fronteira",
+        "idioma",
+        "saudade"
+      ]
+    },
+    {
+      "texto": "o rancor entre dois irmãos que nunca se perdoaram",
+      "tom": "pesado",
+      "palavrasChave": [
+        "anos",
+        "muro",
+        "nome"
+      ]
+    },
+    {
+      "texto": "a coragem de dizer adeus a um amor que já acabou",
+      "tom": "pesado",
+      "palavrasChave": [
+        "mala",
+        "chave",
+        "porta"
+      ]
+    },
+    {
+      "texto": "a fome numa cidade sitiada",
+      "tom": "pesado",
+      "palavrasChave": [
+        "pão",
+        "sirene",
+        "criança"
+      ]
+    },
+    {
+      "texto": "um pedido de desculpas que ninguém quis ouvir",
+      "tom": "pesado",
+      "palavrasChave": [
+        "boca",
+        "orgulho",
+        "costas"
+      ]
+    },
+    {
+      "texto": "o velho que conversa com a fotografia da esposa",
+      "tom": "pesado",
+      "palavrasChave": [
+        "moldura",
+        "chá",
+        "tarde"
+      ]
+    },
+    {
+      "texto": "o medo de esquecer o som da voz de quem partiu",
+      "tom": "pesado",
+      "palavrasChave": [
+        "gravação",
+        "fita",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "um trovador cantando sob a janela de uma dama",
+      "tom": "antigo",
+      "palavrasChave": [
+        "alaúde",
+        "lua",
+        "muro"
+      ]
+    },
+    {
+      "texto": "a queda de uma cidade antiga",
+      "tom": "antigo",
+      "palavrasChave": [
+        "fumaça",
+        "muralha",
+        "sino"
+      ]
+    },
+    {
+      "texto": "um alquimista perto da sua grande descoberta",
+      "tom": "antigo",
+      "palavrasChave": [
+        "fornalha",
+        "frasco",
+        "noite"
+      ]
+    },
+    {
+      "texto": "uma caravana perdida numa tempestade de areia",
+      "tom": "antigo",
+      "palavrasChave": [
+        "vento",
+        "sede",
+        "estrela"
+      ]
+    },
+    {
+      "texto": "os últimos dias de um império",
+      "tom": "antigo",
+      "palavrasChave": [
+        "trono",
+        "poeira",
+        "mármore"
+      ]
+    },
+    {
+      "texto": "um monge copiando um manuscrito à luz de vela",
+      "tom": "antigo",
+      "palavrasChave": [
+        "pena",
+        "tinta",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "uma vila esperando o retorno da frota",
+      "tom": "antigo",
+      "palavrasChave": [
+        "cais",
+        "vela",
+        "oração"
+      ]
+    },
+    {
+      "texto": "um gladiador na véspera da luta",
+      "tom": "antigo",
+      "palavrasChave": [
+        "areia",
+        "espada",
+        "medo"
+      ]
+    },
+    {
+      "texto": "uma rainha lendo uma carta dentro da torre",
+      "tom": "antigo",
+      "palavrasChave": [
+        "tocha",
+        "selo",
+        "exílio"
+      ]
+    },
+    {
+      "texto": "a colheita depois de um longo inverno",
+      "tom": "antigo",
+      "palavrasChave": [
+        "foice",
+        "trigo",
+        "festa"
+      ]
+    },
+    {
+      "texto": "um escriba registrando o fim de uma guerra",
+      "tom": "antigo",
+      "palavrasChave": [
+        "papiro",
+        "tinta",
+        "vento"
+      ]
+    },
+    {
+      "texto": "um viajante encontrando uma taverna numa noite de neve",
+      "tom": "antigo",
+      "palavrasChave": [
+        "lareira",
+        "caneca",
+        "porta"
+      ]
+    },
+    {
+      "texto": "uma reunião que poderia ter sido um e-mail",
+      "tom": "moderno",
+      "palavrasChave": [
+        "relógio",
+        "slide",
+        "café"
+      ]
+    },
+    {
+      "texto": "alguém apagando conversas antigas do celular",
+      "tom": "moderno",
+      "palavrasChave": [
+        "polegar",
+        "nome",
+        "foto"
+      ]
+    },
+    {
+      "texto": "a notificação do perfil de alguém que já partiu",
+      "tom": "moderno",
+      "palavrasChave": [
+        "tela",
+        "foto",
+        "lembrança"
+      ]
+    },
+    {
+      "texto": "um motorista de aplicativo às quatro da manhã",
+      "tom": "moderno",
+      "palavrasChave": [
+        "rádio",
+        "rua",
+        "passageiro"
+      ]
+    },
+    {
+      "texto": "o silêncio de um grupo de mensagens que morreu",
+      "tom": "moderno",
+      "palavrasChave": [
+        "figurinha",
+        "último",
+        "eco"
+      ]
+    },
+    {
+      "texto": "um jantar em que todos olham o celular",
+      "tom": "moderno",
+      "palavrasChave": [
+        "garfo",
+        "tela",
+        "silêncio"
+      ]
+    },
+    {
+      "texto": "a fila do caixa eletrônico fora de serviço",
+      "tom": "moderno",
+      "palavrasChave": [
+        "cartão",
+        "pressa",
+        "painel"
+      ]
+    },
+    {
+      "texto": "a queda de energia numa noite de calor",
+      "tom": "moderno",
+      "palavrasChave": [
+        "ventilador",
+        "vela",
+        "escuro"
+      ]
+    },
+    {
+      "texto": "um drone sobrevoando um bairro tranquilo",
+      "tom": "moderno",
+      "palavrasChave": [
+        "zumbido",
+        "céu",
+        "crianças"
+      ]
+    },
+    {
+      "texto": "o barulho do teclado numa madrugada de prazo final",
+      "tom": "moderno",
+      "palavrasChave": [
+        "café",
+        "prazo",
+        "olhos"
+      ]
+    },
+    {
+      "texto": "um vídeo que viraliza sem quem o fez querer",
+      "tom": "moderno",
+      "palavrasChave": [
+        "curtida",
+        "número",
+        "vergonha"
+      ]
+    },
+    {
+      "texto": "a foto tirada rápido demais para ser guardada",
+      "tom": "moderno",
+      "palavrasChave": [
+        "flash",
+        "sorriso",
+        "galeria"
+      ]
+    }
+  ]
+}

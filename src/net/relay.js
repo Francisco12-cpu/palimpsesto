@@ -20,13 +20,15 @@ export class Relay {
    * @param {number} [o.promoteGraceMs] espera antes de trocar o host que caiu (blips de Wi-Fi não trocam host); 0 = imediato
    * @param {number} [o.maxPeers]       jogadores por sala
    * @param {number} [o.maxRooms]       salas simultâneas
-   * @param {number} [o.maxMsgPerSec]   mensagens por segundo por conexão (o excesso é descartado)
+   * @param {number} [o.maxMsgPerSec]   mensagens por segundo por conexão (o excesso é descartado);
+   *   o host ganha esse valor MULTIPLICADO pelo número de jogadores, porque cada mudança de estado
+   *   vira uma mensagem para cada um — senão, fases rápidas fariam o relay engolir visões
    * @param {boolean} [o.autoPromote]    promove outro jogador quando o host cai (desligado no modo online: lá quem decide é a eleição)
    * @param {boolean} [o.allowCustomRoom] aceita `create` com código próprio e restauração de snapshot (modo online)
    */
   constructor({
     now = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout,
-    promoteGraceMs = 4000, maxPeers = 16, maxRooms = 100, maxMsgPerSec = 80, allowCustomRoom = false, autoPromote = true,
+    promoteGraceMs = 4000, maxPeers = 16, maxRooms = 100, maxMsgPerSec = 120, allowCustomRoom = false, autoPromote = true,
   } = {}) {
     Object.assign(this, { now, setTimer, clearTimer, promoteGraceMs, maxPeers, maxRooms, maxMsgPerSec, allowCustomRoom, autoPromote });
     this.rooms = new Map();
@@ -99,12 +101,14 @@ export class Relay {
     return t;
   }
 
-  /** Limite de taxa: janela de 1 s por conexão. */
+  /** Limite de taxa: janela de 1 s por conexão (o host tem orçamento por jogador). */
   #allowed(ctx) {
     const t = this.now();
     if (t - ctx.winStart >= 1000) { ctx.winStart = t; ctx.winCount = 0; }
     ctx.winCount += 1;
-    return ctx.winCount <= this.maxMsgPerSec;
+    const room = ctx.room && this.rooms.get(ctx.room);
+    const fanOut = room && room.hostId === ctx.id ? Math.max(1, room.peers.size) : 1;
+    return ctx.winCount <= this.maxMsgPerSec * fanOut;
   }
 
   #onMessage(ctx, msg) {

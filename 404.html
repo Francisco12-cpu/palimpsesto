@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a07">
+<meta name="robots" content="noindex">
+<title>Página não encontrada — Palimpsesto</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="src/ui/theme.css">
+<style>
+  .erro { text-align: center; padding: 10vh 0 4vh; }
+  .erro .num { font: 900 clamp(4rem, 22vw, 9rem) var(--f-title); color: var(--gold); letter-spacing: .1em; text-shadow: 0 0 40px rgba(212, 175, 55, .45); line-height: 1; }
+  .erro .frase { font-style: italic; color: var(--ink); font-size: 1.15rem; max-width: 30ch; margin: 12px auto 0; }
+  .erro .acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+  .erro a.botao { font: 600 .82rem var(--f-title); letter-spacing: 1.6px; text-transform: uppercase; text-decoration: none; color: #1b1206; background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, #a98322); border: 1px solid var(--gold-hi); padding: 12px 20px; border-radius: 8px; display: inline-block; }
+  .erro a.ghost { color: var(--gold); background: transparent; border-color: var(--gold-dark); }
+</style>
+</head>
+<body>
+<div class="textura-fundo"></div>
+<main class="shell">
+  <div class="erro">
+    <img src="icon.svg" alt="" width="92" height="92" style="opacity:.9">
+    <div class="num">404</div>
+    <h1 style="font-size:1.4rem;letter-spacing:4px">Página raspada</h1>
+    <p class="frase">Como num palimpsesto, alguém apagou o que havia aqui — e desta vez não sobrou nem o rastro.</p>
+    <div class="acoes">
+      <a class="botao" href="./" id="inicio">Voltar ao jogo</a>
+      <a class="ghost botao" href="https://github.com/Francisco12-cpu/palimpsesto">Ver o código</a>
+    </div>
+  </div>
+  <p class="foot" style="margin-top:30px">Francisco Audir · @filho.af</p>
+</main>
+<script>
+  // No GitHub Pages o 404 é servido em qualquer caminho: aponta o botão para a raiz do projeto.
+  (function () {
+    var p = location.pathname.split('/').filter(Boolean);
+    var base = location.hostname.endsWith('github.io') && p.length ? '/' + p[0] + '/' : '/';
+    document.getElementById('inicio').setAttribute('href', base);
+  })();
+</script>
+</body>
+</html>

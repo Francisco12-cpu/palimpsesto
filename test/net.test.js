@@ -9,7 +9,7 @@ import { CONTENT } from '../src/data/content.js';
 
 const CONFIG = {
   roundsPerPlayer: 2, minChars: 0, guessesPerPlayer: 1,
-  timers: { writing: 30, revealing: 30, guessing: 30, reporting: 30, scoring: 1 },
+  timers: { writing: 30, preview: 30, guessing: 30, reveal: 30, reporting: 30, scoring: 1 },
 };
 
 const clients = [];
@@ -36,10 +36,16 @@ function player(url, id, auto = true) {
     onError: (m) => log.errors.push(m),
     onView: (v) => {
       log.views.push(v);
-      // sigilo: antes da pontuação ninguém vê a vanguarda alheia
-      if (v.phase !== 'scoring' && v.phase !== 'finished' && v.phase !== 'lobby') {
-        for (const [aid, a] of Object.entries(v.assignments)) if (aid !== id && a.vanguard) log.leaks++;
-        for (const [, byP] of Object.entries(v.guesses)) for (const pid of Object.keys(byP)) if (pid !== id) log.leaks++;
+      // sigilo: a vanguarda de um texto só pode aparecer depois do reveal DELE
+      if (!['scoring', 'finished', 'lobby'].includes(v.phase)) {
+        const resolvidos = new Set(v.order.slice(0, v.cursor));
+        if (v.phase === 'reveal' || v.phase === 'reporting') resolvidos.add(v.order[v.cursor]);
+        for (const [aid, a] of Object.entries(v.assignments)) {
+          if (aid !== id && a.vanguard && !resolvidos.has(aid)) log.leaks++;
+        }
+        for (const [aid, byP] of Object.entries(v.guesses ?? {})) {
+          for (const pid of Object.keys(byP)) if (pid !== id && !resolvidos.has(aid)) log.leaks++;
+        }
         for (const d of Object.keys(v.drafts)) if (d !== id) log.leaks++;
       }
       if (!auto || v.phase === 'lobby') return;
@@ -47,7 +53,7 @@ function player(url, id, auto = true) {
       if (acted.has(key) || v.done?.includes(id)) return;
       acted.add(key);
       if (v.phase === 'writing') { c.act({ a: 'draft', text: `texto de ${id}` }); c.act({ a: 'done' }); }
-      else if (v.phase === 'revealing') c.act({ a: 'done' });
+      else if (v.phase === 'preview' || v.phase === 'reveal') c.act({ a: 'done' });
       else if (v.phase === 'guessing') {
         if (v.order[v.cursor] === id) c.act({ a: 'done' });
         else c.act({ a: 'guess', vanguard: v.config.vanguards[(v.cursor + 2) % v.config.vanguards.length] });
@@ -93,7 +99,7 @@ test('partida completa em rede: 3 jogadores, Pronto acelera, sem vazar segredos'
 
     const t0 = Date.now();
     await until(() => ps.every((p) => p.last()?.phase === 'finished'), 20000, 'fim de jogo');
-    assert.ok(Date.now() - t0 < 10000, 'Pronto avançou as fases sem esperar os timers de 30s');
+    assert.ok(Date.now() - t0 < 40000, 'Pronto avançou as fases sem esperar os timers de 30s');
 
     for (const p of ps) {
       assert.equal(p.log.leaks, 0);

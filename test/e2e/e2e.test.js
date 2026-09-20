@@ -4,7 +4,7 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import { launchBrowser, newPage, PHONE, DESKTOP } from '../../tools/browser.mjs';
+import { launchBrowser, launchFirefox, newPage, PHONE, DESKTOP } from '../../tools/browser.mjs';
 import { startMiniBroker } from '../helpers/mini-broker.js';
 
 const browser = await launchBrowser().catch(() => null);
@@ -105,6 +105,7 @@ test('e2e: modo solo até o pódio e a antologia (navegador real)', { skip, time
   await page.$eval('[name=rounds]', (e) => { e.value = '1'; });
   await page.$eval('#fast', (e) => e.click());
   await page.$eval('[name=t_writing]', (e) => { e.value = 8; });
+  for (const [k, v] of Object.entries({ preview: 1, guessing: 3, reveal: 1, reporting: 1, scoring: 2 })) await page.$eval(`[name=t_${k}]`, (e, val) => { e.value = val; }, v);
   await page.$eval('[name=keywords]', (e) => { e.value = 2; });
   await page.click('#cfg .primary');
   await page.waitForSelector('#draft', { timeout: 10000 });
@@ -114,7 +115,7 @@ test('e2e: modo solo até o pódio e a antologia (navegador real)', { skip, time
   await page.evaluate(autoplay);
   await until(() => page.evaluate(() => window.__seen.includes('Palpite')), 40000, 'fase de palpite');
   await shot(page, '07-palpite');
-  await until(() => page.evaluate(() => window.__seen.includes('Pontuação')), 60000, 'pontuação');
+  await until(() => page.evaluate(() => window.__seen.includes('Placar da rodada')), 60000, 'pontuação');
   await shot(page, '08-pontuacao');
   await until(() => hasPodium(page), 60000, 'pódio');
   await wait(1500);
@@ -183,6 +184,23 @@ test('e2e: duas páginas jogando ONLINE (ponte MQTT criptografada, broker de tes
     await playTwo(pair, '11-online');
     assert.deepEqual([...pair.a.problems, ...pair.b.problems], []);
   } finally { await pair.a.close(); await pair.b.browser2.close(); broker.close(); }
+});
+
+test('e2e: o jogo abre num navegador DIFERENTE (Firefox/Gecko) sem erros', { skip, timeout: 90000 }, async () => {
+  const ff = await launchFirefox();
+  if (!ff) { console.log('    (Firefox não encontrado — pulado)'); return; }
+  try {
+    const page = await newPage(ff, PHONE);
+    await page.goto(base, { waitUntil: 'networkidle0' });
+    await wait(1200);
+    assert.match(await page.$eval('.hero h1', (e) => e.textContent), /Palimpsesto/);
+    await page.click('[data-go=about]');
+    await page.waitForSelector('.van-card');
+    assert.equal((await page.$$('.van-card')).length, 19, 'conteúdo veio dos arquivos JSON');
+    assert.ok(await noOverflow(page), 'sem rolagem lateral no Firefox');
+    await shot(page, '12-firefox');
+    assert.deepEqual(page.problems, []);
+  } finally { await ff.close(); }
 });
 
 after(async () => { await browser?.close().catch(() => {}); server?.kill(); setTimeout(() => process.exit(process.exitCode ?? 0), 100).unref(); });

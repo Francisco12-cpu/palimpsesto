@@ -71,7 +71,7 @@ test('modo solo: partida completa pela interface até o pódio e a antologia', {
   click($('[data-go=solo]'));
   $('[name=bots]').value = '2';
   $('[name=rounds]').value = '1';
-  for (const [k, v] of Object.entries({ writing: 3, revealing: 1, guessing: 2, reporting: 2, scoring: 1 })) $(`[name=t_${k}]`).value = v;
+  for (const [k, v] of Object.entries({ writing: 3, preview: 1, guessing: 2, reveal: 1, reporting: 1, scoring: 1 })) $(`[name=t_${k}]`).value = v;
   $('#cfg').dispatchEvent(ev('submit'));
   const seen = new Set();
   const iv = setInterval(() => {
@@ -87,7 +87,7 @@ test('modo solo: partida completa pela interface até o pódio e a antologia', {
     if (done && !done.disabled && !$('#draft') && !$('#gin')) click(done);
   }, 100);
   try { await until(() => $('.podium'), 60000, 'pódio'); } finally { clearInterval(iv); }
-  for (const p of ['Escrevendo', 'Revelação', 'Palpite', 'Denúncias', 'Pontuação']) assert.ok(seen.has(p), `fase ${p}`);
+  for (const p of ['Escrevendo', 'Leia o texto', 'Palpite', 'Resposta', 'Denúncia', 'Placar da rodada']) assert.ok(seen.has(p), `fase ${p}`);
   assert.equal($$('.podium .col').length, 3);
   assert.ok($$('.anthology .item').length >= 3, 'antologia com os textos');
   assert.ok($('#acopy') && $('#adl'));

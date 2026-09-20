@@ -7,13 +7,12 @@
 **Jogue agora:** https://francisco12-cpu.github.io/palimpsesto/ (nada para instalar; funciona no celular)
 **Código:** https://github.com/Francisco12-cpu/palimpsesto
 
-Este documento descreve o projeto **como ele está hoje** (a especificação original foi substituída por ele).
-Os números da seção 9 vêm do analisador (`npm run analyze`) e podem ser regenerados a qualquer momento.
+Este documento descreve o projeto **como ele está hoje**. Os números da seção 9 saem do analisador
+(`npm run analyze`) e podem ser regenerados a qualquer momento.
 
-**Status:** motor, conteúdo, rede local, **modo online sem servidor (GitHub Pages)**, visual, sons, celular e
-empacotamento estão implementados e **verificados em navegador real** (Edge) com dois "aparelhos" jogando uma
-partida completa — inclusive **no site publicado, pelos brokers públicos de verdade**. Restam pendências que só uma
-pessoa pode fechar (celulares físicos, revisão de conteúdo, balanceamento) — ver seção 10.
+**Status:** motor, conteúdo, rede local, modo online sem servidor, visual, sons, celular e empacotamento estão
+implementados e verificados em **navegador real** (Edge/Chromium e Firefox/Gecko), inclusive duas máquinas
+jogando uma partida completa no site publicado. Pendências que dependem de uma pessoa estão na seção 10.
 
 ---
 
@@ -24,197 +23,230 @@ pessoa pode fechar (celulares físicos, revisão de conteúdo, balanceamento) �
 | **Jogar com amigos (mais fácil)** | abrir o link do Pages, “Criar sala”, mostrar o **QR code**; os amigos escaneiam. Precisa de internet |
 | **Jogar sem internet (mesmo Wi-Fi)** | no PC do host, `iniciar.bat` → “Criar sala” → QR code. Se alguém não entrar: `liberar-firewall.bat` (uma vez) |
 | Rodar sem `.bat` | `npm run serve` |
-| Levar num pendrive (com Node dentro) | `npm run pack` → `dist/Palimpsesto/` e `.zip` (~33 MB) |
-| Testar (rápido, ~15 s) | `npm test` (84 testes) |
-| Testar em navegador real | `npm run test:e2e` (Edge/Chrome; grava screenshots com `SHOTS=pasta`) |
-| Verificar o site publicado | `npm run verify:pages` (dois navegadores jogam uma partida online no Pages) |
+| Levar num pendrive (com Node dentro) | `npm run pack` → `dist/Palimpsesto/` e `.zip` |
+| Testar (rápido, ~20 s) | `npm test` (95 testes) |
+| Testar em navegadores reais | `npm run test:e2e` (Edge/Chrome e Firefox; `SHOTS=pasta` grava telas) |
+| Verificar o site publicado | `npm run verify:pages` |
 | Analisar o projeto | `npm run analyze` (`-- --out=arquivo.md` grava; `-- --no-tests` é mais rápido) |
-| Ver uma tela | `npm run shot -- <url> saida.png [celular\|desktop]` |
-| **Publicar mudanças** | `git add -A && git commit -m "..." && git push` — o Pages republica sozinho em ~20 s |
+| **Publicar mudanças** | `git add -A && git commit -m "..." && git push` — o Pages republica em ~20 s |
 
-Requisitos: **Node 22+** só para quem hospeda em rede local e para desenvolver. Jogadores só precisam de navegador.
-`npm install` instala apenas dependências **de desenvolvimento** (`jsdom`, `puppeteer-core`, para os testes); o jogo não tem
+Requisitos: **Node 22+** só para hospedar em rede local e para desenvolver. Jogadores só precisam de navegador.
+`npm install` instala apenas dependências **de desenvolvimento** (testes e ferramentas); o jogo não tem
 dependências de execução.
 
 ---
 
 ## 2. Regras como estão implementadas
 
-### Fases de uma rodada
-`escrevendo → (revelando → palpitando) × cada texto → denunciando → pontuando`, por `rodadas`; depois, **fim de jogo**.
+### Uma rodada
+1. **Escrita** — todos escrevem ao mesmo tempo, com o mesmo relógio.
+2. Depois, **um texto por vez**, na ordem sorteada:
+   - **Leitura (preview)** — o texto aparece por alguns segundos, só para ler.
+   - **Palpite** — cada jogador tem de 1 a 3 palpites (configurável) *naquele* texto. Errou, o jogo diz
+     **“não é X”** sem revelar a resposta e ele pode tentar de novo. Acertou, o avatar dele **acende em dourado**
+     com “conseguiu! +N” para todos — sem mostrar o que ele chutou. A fase acaba quando todos acertam ou
+     esgotam os palpites (ou quando o tempo acaba).
+   - **Resposta** — revela a vanguarda daquele texto, o tema, o tipo, quem acertou (com os pontos) e quem errou.
+   - **Denúncia** — só daquele texto: quem achar que fugiu do tema denuncia ali.
+3. **Placar da rodada** — barras que crescem e pontos subindo, estilo Kahoot.
+4. Repete até acabar as rodadas; depois vêm **pódio, destaques e antologia**.
 
-- Cada jogador recebe **uma vanguarda própria**, um **tema**, um **tipo de texto** e, opcionalmente, um **modificador** e
-  **palavras-chave**.
-- **Botão Pronto** em todas as fases de jogador: se **todos os conectados** marcarem, a fase avança na hora. Na escrita, Pronto
-  **trava** o texto. Quem cai da conexão não segura a fase.
-- O texto é capturado como está quando o tempo acaba (com **400 ms de tolerância** para o último trecho digitado chegar) ou
-  quando todos marcam Pronto. O resultado dos palpites fica **oculto** até a pontuação.
-- **Espectadores:** quem chega com a partida em andamento assiste (sem ver vanguardas nem agir) e joga na próxima.
+O botão **Pronto** existe em todas as fases de jogador: quando todos marcam, a fase avança na hora.
 
 ### Pontuação
-- **+1** para cada jogador que acerta a vanguarda de um texto (no máx. 1 acerto por texto, mesmo com vários palpites).
-- **+1** para o autor por cada pessoa que acertou. Sem bônus de velocidade.
-- **Denúncia válida** (quórum, no máx. “jogadores − 1”): o autor perde `reportPenalty` pontos (padrão 2), com **piso em 0**, e ainda
-  recebe os pontos dos acertos.
-- **Palavras-chave** (opcional): as já usadas ficam marcadas ao vivo na escrita e o resultado mostra “2/3 — faltou: …”. Com
-  `keywordPenalty` > 0, faltar alguma custa esses pontos (piso em 0). Padrão 0 = só informativo.
+- Quem acerta ganha **pelo lugar em que acertou naquele texto**: **3** para o primeiro, **2** para o segundo,
+  **1** para os demais (escala configurável em `hitPoints`).
+- O **autor** ganha **+1** por cada pessoa que acertou a vanguarda dele.
+- **Denúncia válida** (quórum, no máx. “jogadores − 1”): o autor perde `reportPenalty` (padrão 2), piso em 0.
+- **Palavras-chave** (opcional): marcadas ao vivo enquanto se escreve; se `keywordPenalty` > 0, faltar alguma
+  custa esses pontos. Padrão 0 = só informativo.
 
-### Títulos de fim de jogo (só aparecem se a condição for cumprida)
-Fã do *X* (mesma vanguarda chutada N vezes, padrão 3) · Fora da Realidade (texto mais denunciado) · Sniper (≤1 erro e ≥1 acerto) ·
-Mestre do Blefe (todos os outros chutaram e ninguém acertou) · Zero Chute (rodada sem palpite) · Denunciado e Sobreviveu.
+### Destaques de fim de partida
+No máximo **3 badges por jogador**, os mais notáveis primeiro (campo `destaque` em `data/titulos.json`), e
+nenhum se a pessoa não cumpriu condição alguma. Tocar ou passar o mouse mostra a explicação.
+
+| Badge | Condição |
+|---|---|
+| 🃏 Mestre do Blefe | ninguém acertou a vanguarda dele |
+| 🎯 Sniper | no máximo 1 erro na partida, com pelo menos 1 acerto |
+| 🔥 Denunciado e Sobreviveu | denúncia válida e ainda assim ninguém acertou |
+| 🚬 Inimigo da Sogra | acertou um texto escrito em Poesia Marginal |
+| 🥀 Último Romântico | 3 vezes o Romantismo no lugar errado (chutou e errou, ou escreveu e confundiram) |
+| 🎭 Fã do *X* | chutou a mesma vanguarda 3+ vezes |
+| 🌀 Fora da Realidade | escreveu o texto mais denunciado |
+| 🐌 Zero Chute | passou uma rodada sem palpitar |
 
 ### Configuração da sala (o host edita)
-Vanguardas em jogo (com presets), mínimo de **caracteres** (0–3000), palavras-chave por tema (0–5) e penalidade, tipo de texto
-fixo ou sorteado, modificadores, **filtro de palavrões** (troca por asteriscos), rodadas, palpites por texto, quórum e penalidade de
-denúncia, facilitador (autocomplete e/ou lista de nomes), tempo de cada fase. O host só inicia se houver **pelo menos uma
-vanguarda por jogador**.
-
-### Diferenças em relação à spec original
-- **Mínimo de caracteres** em vez de linhas (pedido do autor); é **informativo** (contador e barra), o jogo não bloqueia.
-- **19 vanguardas:** a spec listava 18; a 19ª é o **Classicismo** (escolha minha; trocar é editar uma entrada em
-  `src/data/vanguards.js`).
-- **Rede:** em vez de um servidor WebSocket rodado pelo host (impossível num navegador), há **dois transportes** com o mesmo
-  protocolo (seção 4).
+Vanguardas em jogo (com presets), mínimo de caracteres, palavras-chave por tema e penalidade, tipo de texto,
+modificadores, filtro de palavrões, rodadas, palpites por texto (1–3), quórum e penalidade de denúncia,
+facilitador (autocomplete / lista de nomes) e o tempo de **cada** fase. O host só inicia com pelo menos uma
+vanguarda por jogador.
 
 ---
 
-## 3. Estrutura de arquivos
+## 3. Conteúdo — tudo em JSON, sem tocar em código
 
 ```
-index.html · sw.js · manifest · ícones   página (com CSP), service worker (PWA offline em https/localhost), ícones PNG/SVG
-iniciar.bat · liberar-firewall.bat       atalhos Windows       serve.mjs  servidor local (arquivos + relay WS + /api/info)
-fonts/                                   Cinzel, IM Fell English, Noto Sans Runic (OFL, locais)
+data/vanguardas.json    19 vanguardas: resumo, explicação em texto corrido, "como escrever" e exemplo
+data/temas.json         120 temas com tom e 3 palavras-chave cada
+data/modificadores.json 16 intenções que o texto precisa carregar
+data/tiposTexto.json    poema, carta, conto, diário, manifesto, discurso, bilhete
+data/titulos.json       conquistas: emoji, nome, explicação e destaque
+```
+
+Acrescentar um tema é acrescentar uma entrada no JSON. `src/data/content.js` carrega esses arquivos (por HTTP
+no navegador, do disco no Node) e entrega o conteúdo pronto ao motor.
+
+**As 19 explicações** seguem o mesmo formato: um parágrafo explicando a lógica interna do estilo, uma linha de
+“como escrever” e um exemplo de 2 a 5 linhas. Todos os exemplos partem do **mesmo tema e modificador**
+(*uma xícara de café esfriando na mesa* + *fale sobre a dor de uma perda*), para dar de comparar lado a lado
+como o mesmo ponto de partida vira 19 textos diferentes. Um teste garante que nenhum exemplo se repete.
+
+---
+
+## 4. Estrutura de arquivos
+
+```
+index.html · 404.html · sw.js · manifest · icon.svg/png · og.png   página, erro, PWA, ícones e imagem de link
+iniciar.bat · liberar-firewall.bat · serve.mjs                     hospedar em rede local
+data/                                                              conteúdo do jogo (JSON)
+fonts/            Cinzel, IM Fell English, Noto Sans Runic, Atkinson Hyperlegible, OpenDyslexic (OFL)
 src/
-  brand.js                               nome, frase do anel, autoria, runas, chave de emojis
-  engine/  motor PURO   engine.js (fases/ações/pontos) · config.js · titles.js · view.js (visão por jogador)
-                        text.js (palavras-chave, filtro) · rng.js
-  net/     relay.js (salas, roteamento, relógio, token, limites, persistência)   ws-server.js (WebSocket sem dependências)
-           host.js (GameHost: autoridade, snapshot, espectadores, expulsar)      client.js (GameClient)
-           online.js (OnlineSession: modo sem servidor)   mqtt.js (cliente MQTT)   cipher.js (AES-GCM)
-  solo/    bots.js · solo.js              modo solo com bots
-  data/    vanguards.js · themes.js · content.js
-  ui/      app.js (menu, como jogar, áudio/leitura) · game-views.js (fases) · net-mode.js · solo-mode.js · room-config.js
-           icons.js · fx.js · sound.js · qr.js · theme.css · effects.css
-  vendor/qrcode.mjs                      gerador de QR (MIT)
-test/  84 testes rápidos + e2e/ (navegador real) + helpers/mini-broker.js (broker MQTT de teste)
-tools/ pack · analyze · shot · verify-pages · broker-check · browser (ajudante de navegador real)
+  brand.js        nome, frase do anel, autoria, runas
+  engine/         motor PURO: engine.js (fases/ações/pontos) · config.js · titles.js · view.js · text.js · rng.js
+  net/            relay.js · ws-server.js · host.js · client.js · online.js (MQTT) · mqtt.js · cipher.js
+  solo/           bots.js · solo.js
+  data/content.js carrega os JSON
+  ui/             app.js · game-views.js · net-mode.js · solo-mode.js · room-config.js
+                  icons.js · fx.js · sound.js · qr.js · theme.css · effects.css
+test/             95 testes + e2e/ (navegadores reais) + helpers/mini-broker.js
+tools/            pack · analyze · shot · browser · verify-pages · broker-check
 ```
 
 ---
 
-## 4. Arquitetura
+## 5. Arquitetura
 
-O **motor** é um conjunto de funções puras sobre um estado 100% serializável (sem rede, DOM nem relógio global): o mesmo
-motor roda no solo, na rede local e online. Em cima dele:
+O **motor** é um conjunto de funções puras sobre um estado serializável (sem rede, DOM nem relógio global): o
+mesmo motor roda no solo, na rede local e online.
 
-- **GameHost** (autoridade): só o host aplica ações, valida tudo e manda **a cada jogador a sua visão** (vanguardas, rascunhos
-  e palpites alheios não saem do host). Guarda um **snapshot** (sem o banco de temas, ~8 KB) para migração.
-- **GameClient**: fala o protocolo (`create|join|ping|act` ↔ `joined|msg|from|peer-*|promote|pong|error`), sincroniza o relógio
-  por ping/pong e vira host se for promovido. O timer é por **timestamp absoluto** do relógio do host/relay.
-- **Relay**: salas, roteamento, token por jogador, limites de taxa/sala/servidor, promoção de host, exportar/importar estado.
+- **GameHost** (autoridade): só ele aplica ações e manda **a cada jogador a sua visão**. A vanguarda de um texto
+  só entra na visão a partir da **resposta daquele texto**; os acertos (`hits`) são públicos desde o palpite,
+  porque é o que acende os avatares.
+- **GameClient**: protocolo, relógio sincronizado por ping/pong, vira host se for promovido.
+- **Relay**: salas, roteamento, token por jogador, limites, promoção de host, estado em disco.
+  O host tem orçamento de mensagens proporcional ao número de jogadores (cada mudança vira uma mensagem por pessoa).
 
 ### Dois transportes, mesma lógica
 | | Rede local (`iniciar.bat`) | Online (GitHub Pages) |
 |---|---|---|
 | Ponte | `serve.mjs` (Node) com o `Relay` | broker **MQTT público** (EMQX, Mosquitto, HiveMQ) por WSS |
-| Host | navegador de quem cria a sala | idem — e **o `Relay` roda dentro dele** |
-| Precisa de internet | não | sim |
-| Código da sala | 4 letras | **6 letras** |
-| Segurança do canal | rede local | **AES-GCM**, chave derivada do código (PBKDF2); o broker só vê bytes |
-| Se o host cair | o relay promove o próximo com o último snapshot (tolerância de 4 s) | **eleição**: o próximo da lista assume, restaura o snapshot que o host antigo lhe mandava e ajusta o relógio; os outros reentram sozinhos |
-| Se o servidor cair | salas voltam do disco (`data/rooms.json`) | (não há servidor nosso) |
+| Host | navegador de quem cria a sala | idem — e o `Relay` roda dentro dele |
+| Internet | não precisa | precisa |
+| Código da sala | 4 letras | 6 letras |
+| Canal | rede local | **AES-GCM**, chave derivada do código (PBKDF2); o broker só vê bytes |
+| Host cai | o relay promove o próximo com o último snapshot | eleição: o próximo assume com o snapshot e ajusta o relógio |
+| Servidor cai | salas voltam do disco (`.state/rooms.json`) | (não há servidor nosso) |
 
-O modo é escolhido sozinho: se a página vem de um `serve.mjs` (`/api/info` responde) usa a rede local; em `https` (Pages) usa
-online. Dá para forçar em “Opções de conexão”. Brokers próprios: `localStorage['palimpsesto.brokers'] = ["wss://…"]`.
+O modo é escolhido sozinho (em `https` é online; com `serve.mjs` é local) e dá para forçar em “Opções de conexão”.
 
-### Segurança (implementada)
-- **Token secreto por jogador** (o `id` é público nas visões): ninguém toma o lugar de outro. Limites: 80 msg/s por conexão,
-  16 jogadores/sala, 100 salas, 4 MB por mensagem, derrubada de conexão muda (45 s).
-- Servidor estático com **lista de arquivos permitidos**; ETag + gzip; **Content-Security-Policy** na página (só scripts do próprio
-  site; testada em navegador real); configuração da sala **normalizada** no host; todo texto de jogador passa por `esc()`.
-- Online: mensagens cifradas de ponta a ponta entre jogadores; o tópico usa hash do código (o código não aparece no broker).
-
----
-
-## 5. Conteúdo
-**19 vanguardas** (com explicação só do estilo, sem trechos protegidos), **120 temas** (22–26 por tom, 3 palavras-chave cada,
-tom sorteado primeiro para misturar) e **16 modificadores**. Para expandir: `src/data/themes.js` e `content.js`.
+### Segurança
+Token secreto por jogador · limites de taxa, sala e servidor · mensagem WebSocket até 4 MB · conexão muda
+derrubada em 45 s · servidor com lista de arquivos permitidos, ETag e gzip · **Content-Security-Policy** na
+página (testada em navegador real) · configuração normalizada no host · todo texto de jogador passa por `esc()`.
 
 ---
 
 ## 6. Interface
-Pergaminho escuro e dourado (do menu de exemplo do autor), fontes locais, nome do autor em runas, logo com anel dizendo
-*“Raspe · Reescreva · Adivinhe”*. Telas: menu (nome, cor, criar/entrar/solo, como jogar, sobre, créditos), sala de espera (código,
-**QR**, link, jogadores, expulsar, configuração), escrita, revelação, palpite, denúncias, pontuação, **pódio + títulos +
-antologia** (copiar/baixar).
-- **Efeitos:** anel de tempo, texto revelado linha a linha, splash de fase, contagem 3-2-1, vinheta no fim do tempo, confete,
-  contagem de pontos, holofote no vencedor, marca-d'água giratória.
-- **Sons** (sintetizados): cliques, fases, pena ao digitar, contagem, acerto/erro, fanfarra e **música ambiente**; painel de
-  volume/música/vibração e **tamanho do texto**.
-- **Celular:** botão Pronto colado embaixo, toques ≥ 44 px, áreas seguras, tela acesa, vibração, sem rolagem lateral (testado a
-  390 px), teclado que não cobre a barra.
-- **Acessibilidade:** foco visível, `aria-live`, movimento reduzido respeitado, **contraste AA verificado por teste**.
+
+Pergaminho escuro e dourado, fontes locais, nome do autor em runas, logotipo = **círculo com uma pena**
+(o mesmo ícone do app/PWA), anel do menu com *“Raspe · Reescreva · Adivinhe”*.
+
+- **Escrita:** o nome da vanguarda vem com um resumo curto logo abaixo; **tema, modificador e tipo de texto têm
+  o mesmo peso visual** (mesma etiqueta, mesmo destaque); palavras-chave acendem quando usadas; quebra de linha
+  automática aqui e na exibição.
+- **Palpite:** fila de avatares mostrando quem já acertou, mensagem de erro sem entregar a resposta, autocomplete.
+- **Fim:** pódio, 3 badges por jogador com explicação, antologia com todos os textos (copiar/baixar).
+- **Efeitos:** anel de tempo, texto surgindo linha a linha, splash de fase, contagem 3-2-1, vinheta no fim do
+  tempo, confete, barras e pontos subindo, holofote no vencedor, marca-d’água girando.
+- **Sons:** cliques, fases, pena ao digitar, contagem, acerto/erro, fanfarra e **3 faixas de música ambiente**
+  (Pergaminho, Tinta, Festa), com volume, escolha de faixa e vibração no painel.
+- **Leitura:** tamanho do texto ajustável e **3 fontes** — a do jogo, uma “mais legível” (Atkinson Hyperlegible)
+  e uma **para dislexia** (OpenDyslexic, só baixa se escolhida).
+- **Celular:** botão Pronto colado embaixo, toques ≥ 44 px, áreas seguras, tela acesa, vibração, sem rolagem
+  lateral a 390 px.
+- **Acessibilidade:** foco visível, `aria-live`, movimento reduzido respeitado, contraste AA verificado por teste.
 
 ---
 
-## 7. Testes e qualidade
-`npm test` — **84 testes** (motor, palavras-chave, filtro, Pronto, espectadores, sigilo, relay, persistência, MQTT, cifra, modo
-online completo com migração de host, servidor, áudio com AudioContext falso, contraste, interface em jsdom).
-`npm run test:e2e` — **5 testes em Edge real** (menu no celular sem erros de CSP e sem rolagem lateral, fontes locais, partida solo,
-**duas páginas** jogando em rede local e **online**). `npm run verify:pages` repete isso contra o site publicado.
+## 7. Testes
+
+`npm test` — **95 testes**: motor e fluxo por texto, sigilo por fase, pontuação por ordem, palavras-chave,
+filtro de palavrões, espectadores, títulos e badges, conteúdo (formato das 19 explicações), relay, persistência,
+MQTT, cifra, modo online completo com migração de host, servidor, áudio, contraste e interface em jsdom.
+
+`npm run test:e2e` — **6 testes em navegador real**: menu no celular (sem erros de CSP, sem rolagem lateral,
+fontes locais), desktop, partida solo até o pódio, **duas máquinas** em rede local, **duas máquinas** online, e um
+teste em **Firefox** (motor diferente). `npm run verify:pages` repete a partida online contra o site publicado.
 
 ---
 
-## 8. Achados da análise já corrigidos
-Tomada de lugar por `id` (agora token) · configuração bruta do host exibida sem escape · relay sem limites · migração instantânea
-por piscar de Wi-Fi · carga sem cache · rascunho tardio gerando erro · **promoção do relay embutido interferindo na eleição
-online** · **snapshot final não enviado na saída voluntária do host** · contraste baixo em textos pequenos · aviso duplicado ao trocar
-de porta · 404 no console do Pages (procura de servidor local em https).
+## 8. Checklist de publicação
+
+| Item | Estado |
+|---|---|
+| Favicon e ícones (SVG + PNG 192/512 + apple-touch) | ✓ círculo com pena |
+| `manifest.webmanifest` completo (nome, ícones, cores, `start_url`, `scope`, `id`, screenshots) | ✓ |
+| Open Graph + Twitter card com imagem 1200×630 (`og.png`) | ✓ |
+| Service worker com cache do essencial (inclui os JSON) | ✓ `palimpsesto-v4` |
+| `404.html` com a identidade do site | ✓ |
+| `README.md` | ✓ |
+| `LICENSE` | ✓ MIT (código) + CC BY-NC-SA 4.0 (conteúdo) |
+| `lang="pt-br"`, `<title>`, `description`, `canonical` | ✓ |
+| Nada sensível no código | ✓ (sem chaves nem segredos; o token de jogador é sorteado no navegador) |
+| Testado em outro navegador | ✓ Firefox (Gecko), além de Edge/Chromium |
+| Testado em tela pequena | ✓ 390×844 com toque emulado — **ainda não num aparelho físico** |
 
 ---
 
 ## 9. Métricas (regenere com `npm run analyze`)
-- **51 arquivos próprios, ~5.800 linhas** (testes 1.640 · interface 1.530 · rede 1.190 · motor 520 · ferramentas 390 · conteúdo 230 ·
-  solo 140); sem ciclos de importação, sem módulos órfãos, motor puro, sem `TODO`.
-- **Cobertura:** ~83% de linhas (motor/rede/host acima de 90%; menos cobertos: `net-mode.js` 79%, `fx.js` 87%).
-- **Carga:** ~533 KB (240 KB JS, 28 KB CSS, 179 KB fontes, 84 KB ícones), ~160 KB com gzip estimado.
-- **Desempenho:** ~0,27 ms por ação; partida de 8 jogadores × 3 rodadas simula em ~210 ms; visão de ~3,5 KB por jogador.
-- **No site real:** criar sala + convidado entrar + partida completa em ~27 s (com Pronto automático).
+
+- **50 arquivos próprios, ~6.050 linhas** (testes 1.830 · interface 1.650 · rede 1.190 · motor 600 · ferramentas 410).
+- Sem ciclos de importação, sem módulos órfãos, motor puro, sem `TODO`.
+- **Cobertura:** ~83% de linhas (motor e rede acima de 90%; menos cobertos: `net-mode.js` 79%, `fx.js` 82%).
+- **Carga:** ~800 KB no total, mas a fonte de dislexia (230 KB) só baixa se escolhida; ~240 KB com gzip.
+- **Desempenho:** ~0,27 ms por ação; partida de 8 jogadores × 3 rodadas simula em ~340 ms; visão de ~3,5 KB.
 
 ---
 
-## 10. O que ainda falta (só uma pessoa pode fechar) e riscos
+## 10. O que ainda falta e riscos
 
 ### Pendências
-1. **Celulares físicos** (Android e iPhone). O navegador real testado é o Edge em modo celular (390 px, toque); o que ainda
-   pode diferir: teclado virtual do iOS, política de áudio do Safari, vibração, câmera lendo o QR, economia de bateria.
-2. **Revisar o conteúdo:** a 19ª vanguarda, as explicações (escritas por mim) e os 120 temas.
-3. **Balanceamento com pessoas:** quórum (2), penalidades, limiar do “Fã” (3), tempos das fases.
+1. **Aparelho físico** (Android e iPhone). O teste automático usa 390×844 com toque emulado em dois motores de
+   navegador; faltam teclado do iOS, política de áudio do Safari, vibração real, câmera lendo o QR e bateria.
+2. **Revisar o conteúdo:** a 19ª vanguarda (Classicismo é escolha minha), as 19 explicações e exemplos (escritos
+   por mim) e os 120 temas.
+3. **Balancear jogando:** a escala 3/2/1 favorece quem responde rápido — pode precisar de ajuste com gente real.
 
 ### Não implementado (decisão consciente)
-- **Internacionalização:** textos em português espalhados pelo código; migrar para dicionário compensa só se houver outro idioma.
-- **Minificar/empacotar os JS:** ~35 arquivos, ~160 KB gzip; irrelevante com HTTP/2 e cache.
-- **Retomar a sala em outro aparelho** (hoje a identidade é por aba/navegador) e **auditoria completa com leitor de tela**.
-- **HTTPS na rede local:** o modo online no Pages já dá PWA/offline em HTTPS; na LAN pura o service worker é ignorado (limite do navegador).
+- Internacionalização (só português), minificação dos JS, retomar a sala em outro aparelho, auditoria completa
+  com leitor de tela, HTTPS na rede local.
 
-### Riscos e pontos importantes
-- **O modo online depende de brokers públicos gratuitos** (EMQX, Mosquitto, HiveMQ): sem SLA, podem limitar ou cair. O jogo tenta
-  os três em ordem. Para independência total: hospedar um broker próprio (Mosquitto) e apontar em `palimpsesto.brokers`.
-- **Chave = código de 6 letras:** protege contra curiosos, não contra quem capturar o tráfego e quebrar offline (191 milhões de
-  combinações × PBKDF2). Aceitável para um jogo; não para segredos.
-- **O host vê todos os segredos** da partida (inerente ao modelo “host no navegador”); o **sucessor** também recebe o estado.
-  Entre amigos é aceitável; não impede trapaça deliberada.
-- **Sem autenticação forte:** o token impede tomada de lugar, mas quem tem o código entra.
-- **Queda súbita do host:** o sucessor restaura um snapshot com até ~150 ms + latência de atraso (na saída voluntária o snapshot é final).
-- **Tema/nome:** `BRAND` em `src/brand.js`; `index.html`, `manifest` e `LEIA-ME` têm textos fixos.
+### Riscos
+- **Brokers públicos** do modo online não têm garantia de funcionamento; o jogo tenta três em ordem e dá para
+  apontar um próprio em `localStorage['palimpsesto.brokers']`.
+- **Chave = código de 6 letras:** protege contra curiosos, não contra quem capture o tráfego e ataque offline.
+- **O host (e o sucessor) veem os segredos** da partida — inerente ao modelo “host no navegador”.
+- **Queda súbita do host:** o sucessor restaura um snapshot com até ~150 ms de atraso.
 
 ---
 
-## 11. Decisões tomadas (histórico resumido)
-- Cada jogador recebe **uma vanguarda diferente**; denúncia válida tira 2 pontos (piso 0); acerto vale 1 por texto.
-- JavaScript puro (módulos ES, **sem build**), WebSocket e MQTT **sem bibliotecas**, motor testável em Node.
-- Nome **Palimpsesto**. Interface **sem emojis** por padrão (`BRAND.emoji`).
-- “Pronto” em todas as fases de jogador.
-- **Online sem servidor** via MQTT público cifrado, reaproveitando `Relay` + `GameHost` + `GameClient` no navegador do host.
-- Fontes e QR embutidos para funcionar **sem internet** (no modo local).
-- Testes em **navegador real** com **dois navegadores** (numa mesma janela a aba em segundo plano não recebe cliques).
+## 11. Decisões tomadas
+
+- Um texto por vez (ler → palpitar → resposta → denunciar), com feedback imediato de erro sem entregar a resposta.
+- Pontos por ordem de acerto (3/2/1) e +1 ao autor por acerto recebido.
+- Conteúdo em JSON; código e conteúdo com licenças diferentes.
+- JavaScript puro (módulos ES, sem build); WebSocket e MQTT escritos à mão.
+- Interface sem emojis por padrão (`BRAND.emoji`), com ícones SVG.
+- Online sem servidor via MQTT público cifrado, reaproveitando `Relay` + `GameHost` + `GameClient` no navegador.
+- Testes em dois motores de navegador; dois “aparelhos” exigem dois navegadores (aba em segundo plano não recebe cliques).
