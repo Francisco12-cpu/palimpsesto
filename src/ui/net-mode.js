@@ -59,6 +59,7 @@ function customBrokers() {
 let infoPromise = null;
 function serverInfo() {
   infoPromise ??= (async () => {
+    if (location.protocol === 'https:') return null; // o servidor local é sempre http: em https (ex.: GitHub Pages) só existe o modo online
     try {
       const r = await fetch('api/info', { cache: 'no-store' }); // relativo: funciona também em /palimpsesto/
       if (!r.ok) return null;
