@@ -87,7 +87,7 @@ vanguarda por jogador.
 ## 3. Conteúdo — tudo em JSON, sem tocar em código
 
 ```
-data/vanguardas.json    19 vanguardas: resumo, explicação em texto corrido, "como escrever" e exemplo
+data/vanguardas.json    21 vanguardas: resumo, explicação em texto corrido, "como escrever" e exemplo
 data/temas.json         120 temas com tom e 3 palavras-chave cada
 data/modificadores.json 16 intenções que o texto precisa carregar
 data/tiposTexto.json    poema, carta, conto, diário, manifesto, discurso, bilhete
@@ -97,7 +97,7 @@ data/titulos.json       conquistas: emoji, nome, explicação e destaque
 Acrescentar um tema é acrescentar uma entrada no JSON. `src/data/content.js` carrega esses arquivos (por HTTP
 no navegador, do disco no Node) e entrega o conteúdo pronto ao motor.
 
-**As 19 explicações** seguem o mesmo formato: um parágrafo explicando a lógica interna do estilo, uma linha de
+**As 21 explicações** seguem o mesmo formato: um parágrafo explicando a lógica interna do estilo, uma linha de
 “como escrever” e um exemplo de 2 a 5 linhas. Todos os exemplos partem do **mesmo tema e modificador**
 (*uma xícara de café esfriando na mesa* + *fale sobre a dor de uma perda*), para dar de comparar lado a lado
 como o mesmo ponto de partida vira 19 textos diferentes. Um teste garante que nenhum exemplo se repete.
@@ -182,7 +182,7 @@ Pergaminho escuro e dourado, fontes locais, nome do autor em runas, logotipo = *
 ## 7. Testes
 
 `npm test` — **95 testes**: motor e fluxo por texto, sigilo por fase, pontuação por ordem, palavras-chave,
-filtro de palavrões, espectadores, títulos e badges, conteúdo (formato das 19 explicações), relay, persistência,
+filtro de palavrões, espectadores, títulos e badges, conteúdo (formato das 21 explicações), relay, persistência,
 MQTT, cifra, modo online completo com migração de host, servidor, áudio, contraste e interface em jsdom.
 
 `npm run test:e2e` — **6 testes em navegador real**: menu no celular (sem erros de CSP, sem rolagem lateral,
@@ -224,7 +224,7 @@ teste em **Firefox** (motor diferente). `npm run verify:pages` repete a partida 
 ### Pendências
 1. **Aparelho físico** (Android e iPhone). O teste automático usa 390×844 com toque emulado em dois motores de
    navegador; faltam teclado do iOS, política de áudio do Safari, vibração real, câmera lendo o QR e bateria.
-2. **Revisar o conteúdo:** a 19ª vanguarda (Classicismo é escolha minha), as 19 explicações e exemplos (escritos
+2. **Revisar o conteúdo:** as vanguardas que escolhi (Classicismo, Literatura de Cordel, Romance de 30), as 21 explicações e exemplos (escritos
    por mim) e os 120 temas.
 3. **Balancear jogando:** a escala 3/2/1 favorece quem responde rápido — pode precisar de ajuste com gente real.
 

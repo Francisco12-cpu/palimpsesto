@@ -196,7 +196,7 @@ test('e2e: o jogo abre num navegador DIFERENTE (Firefox/Gecko) sem erros', { ski
     assert.match(await page.$eval('.hero h1', (e) => e.textContent), /Palimpsesto/);
     await page.click('[data-go=about]');
     await page.waitForSelector('.van-card');
-    assert.equal((await page.$$('.van-card')).length, 19, 'conteúdo veio dos arquivos JSON');
+    assert.equal((await page.$$('.van-card')).length, 21, 'conteúdo veio dos arquivos JSON');
     assert.ok(await noOverflow(page), 'sem rolagem lateral no Firefox');
     await shot(page, '12-firefox');
     assert.deepEqual(page.problems, []);

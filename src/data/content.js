@@ -37,7 +37,7 @@ export const VANGUARD_INFO = vanguardas.vanguardas.map((v) => ({
 export const VANGUARDS = VANGUARD_INFO.map((v) => v.name);
 export const EMOJI = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v.emoji]));
 export const VANGUARD_GROUPS = vanguardas.grupos;
-/** Tema e modificador usados nos exemplos comparativos das 19 vanguardas. */
+/** Tema e modificador usados nos exemplos comparativos das 21 vanguardas. */
 export const EXAMPLE_PROMPT = { theme: vanguardas.exemploTema, modifier: vanguardas.exemploModificador };
 
 /** Modo fácil: poucas vanguardas bem contrastantes. */

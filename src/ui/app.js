@@ -3,7 +3,7 @@ import { BRAND, runes } from '../brand.js';
 import { VANGUARD_INFO } from '../data/content.js';
 import { startSolo } from './solo-mode.js';
 import { startNet, session } from './net-mode.js';
-import { esc } from './game-views.js';
+import { esc, guideHtml } from './game-views.js';
 import { icon, logo, seal } from './icons.js';
 import { dust, watermark, installRipple } from './fx.js';
 import { audioSettings, setAudio, setMuted, sfx, music, TRACKS } from './sound.js';
@@ -64,6 +64,7 @@ function menu() {
         <button class="big" data-go="solo">${icon('bot')} Modo solo (bots)</button>
         <button class="big ${firstTime ? 'primary' : ''}" data-go="howto">${icon('book')} Como jogar${firstTime ? ' — comece aqui' : ''}</button>
         <button class="big" data-go="about">${icon('scroll')} Sobre as vanguardas</button>
+        <button class="big" data-go="credits">${icon('star')} Créditos</button>
       </div>
     </div>
     <div class="foot"><a href="#" id="creditsName" class="credit-link">${BRAND.author}</a> · <a href="#" id="credits" class="credit-link">${BRAND.instagram}</a></div>
@@ -105,6 +106,7 @@ function menu() {
     b.onclick = () => {
       const go = b.dataset.go;
       if (go === 'about') return about();
+      if (go === 'credits') return credits();
       if (go === 'howto') return howto();
       const n = needName();
       if (!n) return;
@@ -145,7 +147,7 @@ function about() {
     <p class="dim">Um guia rápido do estilo de cada movimento — use para escrever e para adivinhar.</p>
     ${groups.map((g) => `<h2>${g}</h2>
       ${VANGUARD_INFO.filter((v) => v.group === g).map((v) => `<div class="panel van-card">${seal(v.name, 56)}
-        <div><b>${esc(v.name)}</b><div>${esc(v.about)}</div></div></div>`).join('')}`).join('')}</div>`;
+        <div><b>${esc(v.name)}</b>${guideHtml(v.name)}</div></div>`).join('')}`).join('')}</div>`;
   document.getElementById('back').onclick = menu;
 }
 

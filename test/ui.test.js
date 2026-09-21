@@ -44,7 +44,12 @@ test('menu: como jogar, sobre, cores e painel de áudio', { skip }, () => {
   assert.ok(!$('[data-go=howto]').textContent.includes('comece aqui'));
 
   click($('[data-go=about]'));
-  assert.equal($$('.van-card').length, 19);
+  assert.equal($$('.van-card').length, 21);
+  assert.equal($$('.van-card .guide-example').length, 21, 'cada vanguarda mostra exemplo');
+  click($('#back'));
+
+  click($('[data-go=credits]'));
+  assert.ok($('.panel.gold .runes'), 'botão Créditos do menu');
   click($('#back'));
 
   click($$('.swatch')[3]);

@@ -76,8 +76,8 @@ test('runas: transliteração do nome e da frase do logotipo', () => {
   assert.equal(runes('Raspe · Reescreva'), 'ᚱᚨᛊᛈᛖ ᛫ ᚱᛖᛖᛊᚲᚱᛖᚢᚨ');
 });
 
-test('conteúdo: 19 vanguardas, 120 temas únicos, 16 modificadores', () => {
-  assert.equal(CONTENT.vanguards.length, 19);
+test('conteúdo: 21 vanguardas, 120 temas únicos, 16 modificadores', () => {
+  assert.equal(CONTENT.vanguards.length, 21);
   assert.equal(new Set(CONTENT.themes.map((t) => t.text)).size, 120);
   assert.equal(CONTENT.modifiers.length, 16);
   assert.ok(CONTENT.themes.every((t) => t.keywords.length === 3));

@@ -9,7 +9,7 @@
 import * as E from '../engine/engine.js';
 import { topTitlesFor } from '../engine/titles.js';
 import { BRAND } from '../brand.js';
-import { VANGUARD_INFO } from '../data/content.js';
+import { VANGUARD_INFO, EXAMPLE_PROMPT } from '../data/content.js';
 import { icon, seal } from './icons.js';
 import { avatar, confetti, countUp, splash, bigCount, urgency, shake, announce, keepAwake } from './fx.js';
 import { sfx, haptic } from './sound.js';
@@ -29,8 +29,18 @@ const PHASES = {
 const CIRC = 2 * Math.PI * 19;
 const TEXT_PHASES = ['preview', 'guessing', 'reveal', 'reporting'];
 const READY_PHASES = ['writing', 'preview', 'guessing', 'reveal', 'reporting'];
-const ABOUT = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v.about]));
+const INFO = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v]));
 const SHORT = Object.fromEntries(VANGUARD_INFO.map((v) => [v.name, v.short]));
+
+/** Bloco completo de um estilo: explicação, como escrever e um exemplo curto (mesmo tema para todas as vanguardas). */
+export function guideHtml(name) {
+  const v = INFO[name];
+  if (!v) return '';
+  return `<p class="guide-about">${esc(v.about)}</p>
+    <div class="guide-how"><b>Como escrever:</b> ${esc(v.howTo)}</div>
+    <div class="guide-example"><div class="lbl">Exemplo — tema: ${esc(EXAMPLE_PROMPT.theme)}</div>
+      <p class="ex">${esc(v.example)}</p></div>`;
+}
 
 /** Copia texto (com alternativa para navegadores sem a API de área de transferência). */
 export async function copyText(text) {
@@ -111,7 +121,6 @@ export function createGameView(app, ctx) {
         <div class="info">
           <div class="lbl">Sua vanguarda (segredo)</div>
           <div class="van">${esc(a.vanguard)}</div>
-          <p class="van-short">${esc(SHORT[a.vanguard] ?? '')}</p>
         </div>
       </div>
       <div class="panel rules">
@@ -121,7 +130,7 @@ export function createGameView(app, ctx) {
         ${a.keywords.length ? `<div class="rule"><span class="lbl">Palavras-chave${s.config.keywordPenalty ? ` (−${s.config.keywordPenalty} pt se faltar)` : ''}</span>
           <span class="val" id="kws">${a.keywords.map((k) => `<span class="tag kw" data-k="${esc(k)}">${esc(k)}</span>`).join('')}</span></div>` : ''}
       </div>
-      <details class="tip"><summary>Como escrever neste estilo</summary><p>${esc(ABOUT[a.vanguard] ?? '')}</p></details>
+      <details class="panel guide" open><summary>Guia do estilo ${esc(a.vanguard)}</summary>${guideHtml(a.vanguard)}</details>
       <textarea id="draft" placeholder="Escreva no estilo do ${esc(a.vanguard)}… sem revelar o nome!" ${locked ? 'readonly' : ''} spellcheck="true" autocapitalize="sentences" enterkeyhint="enter"></textarea>
       <div class="counter"><span id="lines"></span><div class="bar"><i id="cbar"></i></div></div>
       ${readyBtn('Já terminei — Pronto')}

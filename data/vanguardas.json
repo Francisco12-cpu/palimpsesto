@@ -1,7 +1,11 @@
 {
   "exemploTema": "uma xícara de café esfriando na mesa",
   "exemploModificador": "Fale sobre a dor de uma perda",
-  "grupos": ["Pré-modernos", "Vanguardas europeias", "Brasileiras"],
+  "grupos": [
+    "Pré-modernos",
+    "Vanguardas europeias",
+    "Brasileiras"
+  ],
   "vanguardas": [
     {
       "nome": "Classicismo",
@@ -173,6 +177,24 @@
       "sobre": "O Tropicalismo mistura sem pedir licença: o popular e o erudito, o brasileiro e o importado, o arcaico e o moderno entram no mesmo texto. A colagem é intencional e alegre, mas funciona como crítica — ao mostrar o país como caldeirão de contradições, expõe o que há nele de desigual e de cafona. O clima permanece festivo mesmo quando o assunto é grave, e é justamente esse contraste que incomoda.",
       "comoEscrever": "Junte marcas, músicas e objetos de origens diferentes na mesma frase, misture o luxo e o cafona, e mantenha tom de festa mesmo falando de dor.",
       "exemplo": "Café frio na xícara comprada na Santa Ifigênia, coca-cola morna na geladeira, a novela das nove chorando por mim.\nMinha dor tem ritmo de bolero e legenda em inglês: I miss you, mainha.\nEnterro com guarda-chuva colorido e banda de pífano tocando os Beatles fora do tom —\ne o Brasil inteiro me oferecendo um cafezinho que eu já não consigo tomar."
+    },
+    {
+      "nome": "Literatura de Cordel",
+      "emoji": "📜",
+      "grupo": "Brasileiras",
+      "resumo": "Versos rimados de feira nordestina: narrador sabido, humor e sofrimento contados como causo.",
+      "sobre": "O cordel nasceu para ser cantado e vendido em feira, pendurado num barbante. Por isso conta uma história do começo ao fim, com narrador que fala direto ao ouvinte e chama a atenção dele como quem prende a roda. A rima é o coração do estilo: versos curtos, de ritmo marcado, fáceis de guardar de cabeça. A linguagem é a do povo do sertão, com humor, exagero e moral da história, e até a dor vira causo que se conta com graça e respeito. O assunto pode ser pequeno, mas o tom é de quem tem uma lição para deixar.",
+      "comoEscrever": "Escreva em versos curtos que rimam de dois em dois, abra chamando o ouvinte, use fala nordestina e feche com uma moral da história.",
+      "exemplo": "Ouçam, amigos, meu causo, que hoje eu venho recitar:\nda xícara de café que esfriou sem me esperar.\nFui atrás de algum consolo e só achei foi solidão,\nque saudade, meu povo, não se coa em coador não."
+    },
+    {
+      "nome": "Romance de 30",
+      "emoji": "🌵",
+      "grupo": "Brasileiras",
+      "resumo": "Prosa seca e social: poucas palavras, paisagem dura e gente miúda esmagada pelas condições.",
+      "sobre": "O Romance de 30 olha o Brasil de frente e sem enfeite. Depois da festa da primeira fase modernista, os escritores voltam-se para a seca, a pobreza e a injustiça do interior, e contam tudo com prosa enxuta, quase seca como a terra. As frases são curtas, diretas e sem floreio, porque o que importa é a gente humilde e o que a vida faz com ela. O ambiente pesa sobre os personagens, que falam pouco e sentem muito, e a crítica social aparece na cena em vez de virar discurso. O sofrimento é concreto, feito de fome, de calor e de trabalho, e nunca de metáfora bonita.",
+      "comoEscrever": "Use frases curtas e secas, mostre o ambiente duro pesando sobre uma pessoa simples e deixe a crítica social dentro da cena, sem sermão.",
+      "exemplo": "A xícara esfriou na mesa. Sinhá Vitória olhou para ela e não disse nada.\nO café era pouco e o dia seria longo. Lá fora a terra rachava como a boca dos meninos.\nEla bebeu de um gole só. Tinha aprendido que sentir demora e trabalho não espera.\nDepois lavou a xícara e voltou para o roçado."
     }
   ]
 }

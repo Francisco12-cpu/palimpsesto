@@ -116,7 +116,7 @@ test('badges: no máximo 3 por jogador, os mais notáveis primeiro, e nenhum se 
 });
 
 test('conteúdo: cada vanguarda tem explicação em parágrafo, "como escrever" e exemplo único', () => {
-  assert.equal(VANGUARD_INFO.length, 19);
+  assert.equal(VANGUARD_INFO.length, 21);
   const exemplos = new Set();
   for (const v of VANGUARD_INFO) {
     assert.ok(v.short.length > 30, `${v.name}: resumo curto demais`);
@@ -128,7 +128,7 @@ test('conteúdo: cada vanguarda tem explicação em parágrafo, "como escrever" 
     assert.ok(linhas.length >= 2 && linhas.length <= 5, `${v.name}: exemplo com ${linhas.length} linhas`);
     exemplos.add(v.example);
   }
-  assert.equal(exemplos.size, 19, 'nenhum exemplo repetido');
+  assert.equal(exemplos.size, 21, 'nenhum exemplo repetido');
 });
 
 test('o placar guarda a ordem dos acertos rodada a rodada (histórico da antologia)', () => {
